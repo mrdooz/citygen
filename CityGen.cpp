@@ -272,7 +272,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  imguiRenderGLInit("c:\\windows\\fonts\\calibri.ttf");
+  imguiRenderGLInit("calibri.ttf");
 
   if (!initShaders())
   {
