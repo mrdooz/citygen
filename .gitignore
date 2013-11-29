@@ -5,3 +5,8 @@ ipch
 *.sln
 *.suo
 *.opensdf
+CMakeCache.txt
+CMakeFiles/*
+Makefile
+citygen
+cmake_install.cmake

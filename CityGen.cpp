@@ -5,10 +5,17 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <GL/glew.h>
+
+#ifdef _WIN32
 #include <windows.h>
 #include <direct.h>
-#include <gl/glew.h>
-#include <gl/GLU.h>
+#include <GL/GLU.h>
+#else
+#include <OpenGL/glu.h>
+#include <unistd.h>
+#endif
+
 
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
@@ -159,7 +166,7 @@ namespace citygen
         break;
       }
 
-      _chdir("..");
+      chdir("..");
 
       // break if at the root
       string tmp = CurrentDirectory();

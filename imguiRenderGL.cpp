@@ -20,9 +20,13 @@
 #include <math.h>
 #include "imgui.h"
 #include <stdio.h>
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <gl/GL.h>
+#else
+#include <OpenGL/GL.h>
+#endif
 
 // Some math headers don't have PI defined.
 static const float PI = 3.14159265f;
