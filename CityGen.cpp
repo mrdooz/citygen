@@ -113,26 +113,21 @@ namespace citygen
     glPointSize(2);
     glDrawArrays(GL_POINTS, 0, 256*256);
 
-    vec3 p = pos + 10000.0f * rayDir;
-    GLfloat verts[] = { pos.x, pos.y, pos.z, p.x, p.y, p.z };
+    // glLineWidth(2);
+    // vec3 p = pos + 10000.0f * rayDir;
+    // GLfloat verts[] = { pos.x, pos.y, pos.z, p.x, p.y, p.z };
 
-    glBindBuffer(GL_ARRAY_BUFFER, lineVbo);
-    if (vec3* ptr = (vec3*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY))
-    {
-      ptr[0] = pos;
-      ptr[1] = p;
-      glUnmapBuffer(GL_ARRAY_BUFFER);
-    }
-    glDrawArrays(GL_LINE, 0, 2);
-
-    GLenum err = glGetError();
-    if (err != 0)
-    {
-      printf("%s\n", gluErrorString(err));
-    }
+    // glBindBuffer(GL_ARRAY_BUFFER, lineVbo);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    // if (vec3* ptr = (vec3*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY))
+    // {
+    //   ptr[0] = pos;
+    //   ptr[1] = p;
+    //   glUnmapBuffer(GL_ARRAY_BUFFER);
+    // }
+    // glDrawArrays(GL_LINES, 0, 2);
 
     glUseProgram(0);
-
 
     // back to GUI
     glEnable(GL_BLEND);
@@ -201,23 +196,28 @@ namespace citygen
       glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
       vector<char> buf(length);
       glGetShaderInfoLog(shader, length, &length, buf.data());
-      printf(buf.data());
+      printf("%s", buf.data());
     }
 
     return shader;
   }
 
-  bool initShaders()
+  Error InitShaders()
   {
     shaderProgram   = glCreateProgram();
     vertexShader    = loadShader("simple.vert.glsl", GL_VERTEX_SHADER);
     fragmentShader  = loadShader("simple.frag.glsl", GL_FRAGMENT_SHADER);
 
+    if (vertexShader == -1 || fragmentShader == -1)
+    {
+      return Error::INVALID_SHADER;
+    }
+
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
 
     glLinkProgram(shaderProgram);
-    return true;
+    return Error::OK;
   }
 
   Error CreateHeightField()
@@ -281,7 +281,7 @@ int main(int argc, char** argv)
 
   imguiRenderGLInit("calibri.ttf");
 
-  if (!initShaders())
+  if (!InitShaders())
   {
     return 1;
   }
@@ -289,7 +289,9 @@ int main(int argc, char** argv)
   if (CreateHeightField() != Error::OK)
     return 1;
 
-  glGenBuffers(1, &lineVbo);
+  // glGenBuffers(1, &lineVbo);
+  // glBindBuffer(GL_ARRAY_BUFFER, lineVbo);
+  // glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
 
   bool quit = false;
   while (!quit)

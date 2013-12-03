@@ -9,5 +9,7 @@ namespace citygen
     FILE_NOT_FOUND,
     FILE_READ_ERROR,
 
+    INVALID_SHADER,
+
   };
 }
