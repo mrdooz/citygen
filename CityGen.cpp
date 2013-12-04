@@ -44,7 +44,21 @@ namespace citygen
 
   GLuint lineVbo;
 
-  static void renderFrame()
+  GLuint sphereVbo;
+  float sphereRadius = 100;
+  vec3 sphereCenter(-20,-100,0);
+
+  //---------------------------------------------------------------------------------
+  //
+  vec4 Unproject(const vec4& v, const mat4& view, const mat4& proj)
+  {
+    mat4 inv = glm::inverse(proj * view);
+    return inv * v;
+  }
+
+  //---------------------------------------------------------------------------------
+  //
+  static void RenderFrame()
   {
     glClearColor(0 / 255.0f, 0x2b / 255.0f, 0x36 / 255.0f, 1.0f);
     glClearDepth(1.0f);
@@ -72,27 +86,36 @@ namespace citygen
     sprintf(buf, "mouse: %d, %d", mouseX, mouseY);
     imguiLabel(buf);
 
+    float nearPlane = 1;
+    float farPlane = 10000;
+
     vec3 pos(xPos, yPos, zPos);
     mat4 view = glm::lookAt(pos, vec3(0, 0, 0), vec3(0, 1, 0));
-    mat4 invView = glm::inverse(view);
+    mat4 proj = glm::perspective(45.0f, 4.0f / 3.0f, nearPlane, farPlane);
 
-    mat4 proj = glm::perspective(45.0f, 4.0f / 3.0f, 1.0f, 10000.f);
-    mat4 invProj = glm::inverse(proj);
-
-    vec3 vecNdc((2.0f * mouseX) / width - 1, 1.0f - (2.0f * mouseY) / height, 1.0f);
+    vec2 vecNdc((2.0f * mouseX) / width - 1, 1.0f - (2.0f * mouseY) / height);
     vec4 vecClip(vecNdc.x, vecNdc.y, -1, 1);
-    vec4 vecEye = vecClip * invProj;
-    vecEye.z = -1;
-    vecEye.w = 1;
 
-    vec4 vecWorld = vecEye * invView;
-    vec3 rayDir(glm::normalize(vec3(vecWorld.x, vecWorld.y, vecWorld.z)));
+    vec4 nearPos = Unproject(vec4(vecNdc.x, vecNdc.y, -1, 1), view, proj);
+    vec3 np(nearPos.x, nearPos.y, nearPos.z);
+    vec3 d = glm::normalize(np - pos);
 
-    // check if the ray intersects the plane (0,1,0,0)
-    vec3 n(0,1,0);
-    float t = glm::dot(pos, n) / glm::dot(rayDir, n);
+    // check if the ray intersects the sphere
+    float a = dot(d,d);
+    float b = 2 * dot(pos - sphereCenter, d);
+    float c = dot(pos - sphereCenter, pos - sphereCenter) - sphereRadius * sphereRadius;
 
-    sprintf(buf, "dir: %f, %f, %f. t: %f", rayDir.x, rayDir.y, rayDir.z, t);
+    bool hit = false;
+    float t1=0, t2=0;
+    float discriminant = sqrtf(b*b - 4*a*c);
+    if (discriminant > 0)
+    {
+      hit = true;
+      t1 = (-b - discriminant) / (2*a);
+      t2 = (-b + discriminant) / (2*a);
+    }
+
+    sprintf(buf, "dir: %f, %f, %f. t: %f, hit: %s", d.x, d.y, d.z, min(t1,t2), hit ? "Y" : "N");
     imguiLabel(buf);
 
     imguiEndScrollArea();
@@ -101,31 +124,34 @@ namespace citygen
     // render stuff
     glUseProgram(shaderProgram);
 
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, heightVbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(glm::value_ptr(proj));
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(glm::value_ptr(view));
 
     glPointSize(2);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, heightVbo);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glDrawArrays(GL_POINTS, 0, 256*256);
 
-    // glLineWidth(2);
-    // vec3 p = pos + 10000.0f * rayDir;
-    // GLfloat verts[] = { pos.x, pos.y, pos.z, p.x, p.y, p.z };
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glDrawArrays(GL_POINTS, 0, 10000);
 
-    // glBindBuffer(GL_ARRAY_BUFFER, lineVbo);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    // if (vec3* ptr = (vec3*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY))
-    // {
-    //   ptr[0] = pos;
-    //   ptr[1] = p;
-    //   glUnmapBuffer(GL_ARRAY_BUFFER);
-    // }
-    // glDrawArrays(GL_LINES, 0, 2);
+    glLineWidth(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, lineVbo);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    if (vec3* ptr = (vec3*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY))
+    {
+      ptr[0] = np;
+      ptr[1] + np + 10.0f * d;
+      glUnmapBuffer(GL_ARRAY_BUFFER);
+    }
+
+    glDrawArrays(GL_LINES, 0, 2);
 
     glUseProgram(0);
 
@@ -149,6 +175,8 @@ namespace citygen
     SDL_GL_SwapWindow(displayWindow);
   }
 
+  //---------------------------------------------------------------------------------
+  //
   bool Init()
   {
     // find the app.root
@@ -175,6 +203,8 @@ namespace citygen
     return true;
   }
 
+  //---------------------------------------------------------------------------------
+  //
   GLuint loadShader(const char* filename, GLuint type)
   {
     GLuint shader = glCreateShader(type);
@@ -202,6 +232,8 @@ namespace citygen
     return shader;
   }
 
+  //---------------------------------------------------------------------------------
+  //
   Error InitShaders()
   {
     shaderProgram   = glCreateProgram();
@@ -220,6 +252,34 @@ namespace citygen
     return Error::OK;
   }
 
+  //---------------------------------------------------------------------------------
+  //
+  void GenerateSphere()
+  {
+    vector<vec3> verts;
+
+    while (verts.size() < 10000)
+    {
+      float x = -1 + 2 * (rand() / (float)RAND_MAX);
+      float y = -1 + 2 * (rand() / (float)RAND_MAX);
+      float z = -1 + 2 * (rand() / (float)RAND_MAX);
+
+      vec3 p(x,y,z);
+      p *= sphereRadius;
+
+      if (glm::length(p) < sphereRadius)
+      {
+        verts.push_back(p + sphereCenter);
+      }
+    }
+
+    glGenBuffers(1, &sphereVbo);
+    glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
+    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(vec3), verts.data(), GL_STATIC_DRAW);
+  }
+
+  //---------------------------------------------------------------------------------
+  //
   Error CreateHeightField()
   {
     vector<u8> buf;
@@ -281,17 +341,20 @@ int main(int argc, char** argv)
 
   imguiRenderGLInit("calibri.ttf");
 
-  if (!InitShaders())
+  Error err = InitShaders();
+  if (err != Error::OK)
   {
-    return 1;
+    return (int)err;
   }
 
   if (CreateHeightField() != Error::OK)
     return 1;
 
-  // glGenBuffers(1, &lineVbo);
-  // glBindBuffer(GL_ARRAY_BUFFER, lineVbo);
-  // glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+  GenerateSphere();
+
+  glGenBuffers(1, &lineVbo);
+  glBindBuffer(GL_ARRAY_BUFFER, lineVbo);
+  glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
 
   bool quit = false;
   while (!quit)
@@ -333,7 +396,7 @@ int main(int argc, char** argv)
         break;
       }
     }
-    renderFrame();
+    RenderFrame();
   }
 
   SDL_GL_DeleteContext(glcontext);
