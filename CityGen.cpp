@@ -86,17 +86,22 @@ namespace citygen
     sprintf(buf, "mouse: %d, %d", mouseX, mouseY);
     imguiLabel(buf);
 
-    float nearPlane = 1;
+    float nearPlane = 2;
     float farPlane = 10000;
 
     vec3 pos(xPos, yPos, zPos);
     mat4 view = glm::lookAt(pos, vec3(0, 0, 0), vec3(0, 1, 0));
     mat4 proj = glm::perspective(45.0f, 4.0f / 3.0f, nearPlane, farPlane);
 
+    vec4 r = proj * vec4(0,0,-nearPlane, 1);
+
     vec2 vecNdc((2.0f * mouseX) / width - 1, 1.0f - (2.0f * mouseY) / height);
     vec4 vecClip(vecNdc.x, vecNdc.y, -1, 1);
 
-    vec4 nearPos = Unproject(vec4(vecNdc.x, vecNdc.y, -1, 1), view, proj);
+    // multiply by the perspective divide
+    vecClip *= nearPlane;
+
+    vec4 nearPos = Unproject(vecClip, view, proj);
     vec3 np(nearPos.x, nearPos.y, nearPos.z);
     vec3 d = glm::normalize(np - pos);
 
