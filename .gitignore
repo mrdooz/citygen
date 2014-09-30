@@ -1,4 +1,11 @@
+tags
+trace
 editor/cmake_install.cmake
+**/.idea/*
+med/out/*
+cmake_install.cmake
+citygen.xcodeproj/*
+CMakeScripts/*
 **/Debug/
 **/Release/
 **/Distribution/

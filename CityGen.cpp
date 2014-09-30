@@ -10,7 +10,7 @@ u32 g_width, g_height;
 
 using namespace citygen;
 
-Editor* Editor::_instance;
+CityGen* CityGen::_instance;
 
 //----------------------------------------------------------------------------------
 // This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
@@ -209,7 +209,7 @@ void UpdateImGui()
   // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
   // TODO: handle keypresses etc
   double mouse_x, mouse_y;
-  Vector2i mousePos = sf::Mouse::getPosition(*EDITOR._renderWindow);
+  Vector2i mousePos = sf::Mouse::getPosition(*CITYGEN._renderWindow);
   mouse_x = mousePos.x;
   mouse_y = mousePos.y;
   io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);                           // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
@@ -221,16 +221,16 @@ void UpdateImGui()
 }
 
 //----------------------------------------------------------------------------------
-void Editor::Create()
+void CityGen::Create()
 {
   if (!_instance)
   {
-    _instance = new Editor();
+    _instance = new CityGen();
   }
 }
 
 //----------------------------------------------------------------------------------
-void Editor::Destroy()
+void CityGen::Destroy()
 {
   if (_instance)
   {
@@ -239,13 +239,13 @@ void Editor::Destroy()
 }
 
 //----------------------------------------------------------------------------------
-Editor& Editor::Instance()
+CityGen& CityGen::Instance()
 {
   return *_instance;
 }
 
 //----------------------------------------------------------------------------------
-Editor::Editor()
+CityGen::CityGen()
   : _renderWindow(nullptr)
   , _eventManager(nullptr)
   , _virtualWindowManager(nullptr)
@@ -257,7 +257,7 @@ Editor::Editor()
 }
 
 //----------------------------------------------------------------------------------
-Editor::~Editor()
+CityGen::~CityGen()
 {
   delete _renderWindow;
   delete _eventManager;
@@ -265,7 +265,7 @@ Editor::~Editor()
 }
 
 //----------------------------------------------------------------------------------
-bool Editor::Init()
+bool CityGen::Init()
 {
 // 
 //   _fileWatcher.AddFileWatch(GetAppRoot() + "config/editor_settings.pb", 0, true, 0, [this](const string& filename, void* token)
@@ -303,12 +303,12 @@ bool Editor::Init()
   _renderWindow->setVerticalSyncEnabled(true);
   _eventManager = new WindowEventManager(_renderWindow);
 
-  _eventManager->RegisterHandler(Event::KeyPressed, bind(&Editor::OnKeyPressed, this, _1));
-  _eventManager->RegisterHandler(Event::KeyReleased, bind(&Editor::OnKeyReleased, this, _1));
-  _eventManager->RegisterHandler(Event::TextEntered, bind(&Editor::OnTextEntered, this, _1));
-  _eventManager->RegisterHandler(Event::LostFocus, bind(&Editor::OnLostFocus, this, _1));
-  _eventManager->RegisterHandler(Event::GainedFocus, bind(&Editor::OnGainedFocus, this, _1));
-  _eventManager->RegisterHandler(Event::MouseButtonReleased, bind(&Editor::OnMouseButtonReleased, this, _1));
+  _eventManager->RegisterHandler(Event::KeyPressed, bind(&CityGen::OnKeyPressed, this, _1));
+  _eventManager->RegisterHandler(Event::KeyReleased, bind(&CityGen::OnKeyReleased, this, _1));
+  _eventManager->RegisterHandler(Event::TextEntered, bind(&CityGen::OnTextEntered, this, _1));
+  _eventManager->RegisterHandler(Event::LostFocus, bind(&CityGen::OnLostFocus, this, _1));
+  _eventManager->RegisterHandler(Event::GainedFocus, bind(&CityGen::OnGainedFocus, this, _1));
+  _eventManager->RegisterHandler(Event::MouseButtonReleased, bind(&CityGen::OnMouseButtonReleased, this, _1));
 
   // add the editor windows
   {
@@ -318,26 +318,25 @@ bool Editor::Init()
     float h = (float)g_height/2;
   }
 
-  //InitGL();
   InitImGui();
 
   return true;
 }
 
 //----------------------------------------------------------------------------------
-bool Editor::OnLostFocus(const Event& event)
+bool CityGen::OnLostFocus(const Event& event)
 {
   return false;
 }
 
 //----------------------------------------------------------------------------------
-bool Editor::OnGainedFocus(const Event& event)
+bool CityGen::OnGainedFocus(const Event& event)
 {
   return false;
 }
 
 //----------------------------------------------------------------------------------
-bool Editor::OnKeyPressed(const Event& event)
+bool CityGen::OnKeyPressed(const Event& event)
 {
   Keyboard::Key key = event.key.code;
 
@@ -360,7 +359,7 @@ bool Editor::OnKeyPressed(const Event& event)
 }
 
 //----------------------------------------------------------------------------------
-bool Editor::OnTextEntered(const Event& event)
+bool CityGen::OnTextEntered(const Event& event)
 {
   u32 c = event.text.unicode;
   if (c <= 255)
@@ -370,7 +369,7 @@ bool Editor::OnTextEntered(const Event& event)
 }
 
 //----------------------------------------------------------------------------------
-bool Editor::OnKeyReleased(const Event& event)
+bool CityGen::OnKeyReleased(const Event& event)
 {
   Keyboard::Key key = event.key.code;
 
@@ -386,13 +385,13 @@ bool Editor::OnKeyReleased(const Event& event)
 }
 
 //----------------------------------------------------------------------------------
-bool Editor::OnMouseButtonReleased(const Event& event)
+bool CityGen::OnMouseButtonReleased(const Event& event)
 {
   return false;
 }
 
 //----------------------------------------------------------------------------------
-void Editor::Update()
+void CityGen::Update()
 {
 //   ptime now = microsec_clock::local_time();
 // 
@@ -421,7 +420,7 @@ void Editor::Update()
 }
 
 //----------------------------------------------------------------------------------
-void Editor::Render()
+void CityGen::Render()
 {
   _renderWindow->clear();
 
@@ -431,13 +430,18 @@ void Editor::Render()
   _virtualWindowManager->Draw();
   _renderWindow->popGLStates();
 
+  static bool open = true;
+  ImGui::Begin("Properties", &open, ImVec2(200, 100));
+  ImGui::End();
+
+
   ImGui::Render();
 
   _renderWindow->display();
 }
 
 //----------------------------------------------------------------------------------
-bool Editor::Run()
+bool CityGen::Run()
 {
   while (_renderWindow->isOpen() && !_stateFlags.IsSet(StateFlagsF::Done))
   {
@@ -449,7 +453,7 @@ bool Editor::Run()
 }
 
 //----------------------------------------------------------------------------------
-bool Editor::Close()
+bool CityGen::Close()
 {
   return true;
 }
@@ -458,15 +462,15 @@ bool Editor::Close()
 int main(int argc, char** argv)
 {
 
-  Editor::Create();
-  if (!EDITOR.Init())
+  CityGen::Create();
+  if (!CITYGEN.Init())
     return 1;
 
-  EDITOR.Run();
+  CITYGEN.Run();
 
-  EDITOR.Close();
+  CITYGEN.Close();
 
-  Editor::Destroy();
+  CityGen::Destroy();
 
   return 0;
 }

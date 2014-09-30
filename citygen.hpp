@@ -26,7 +26,7 @@ namespace bristol
 
 namespace citygen
 {
-  class Editor
+  class CityGen
   {
   public:
 
@@ -40,14 +40,14 @@ namespace citygen
 
     static void Create();
     static void Destroy();
-    static Editor& Instance();
+    static CityGen& Instance();
 
     bool Init();
     bool Run();
     bool Close();
 
-    Editor();
-    ~Editor();
+    CityGen();
+    ~CityGen();
 
     void Update();
     void Render();
@@ -64,7 +64,7 @@ namespace citygen
     WindowEventManager* _eventManager;
     VirtualWindowManager* _virtualWindowManager;
 
-    static Editor* _instance;
+    static CityGen* _instance;
     string _appRoot;
     //ptime _lastUpdate;
     //time_duration _curTime;
@@ -74,5 +74,5 @@ namespace citygen
     FileWatcher _fileWatcher;
   };
 
-#define EDITOR Editor::Instance()
+#define CITYGEN CityGen::Instance()
 }
