@@ -1,0 +1,1 @@
+cmake -G "Visual Studio 12 Win64" -DCMAKE_MODULE_PATH=d:/projects/SFML-2.1/cmake/Modules/;d:/projects/bristol/cmake/Modules/ -DCMAKE_INCLUDE_PATH=d:\projects\sfml-2.1\include -DCMAKE_LIBRARY_PATH=d:\projects\sfml-2.1;d:\projects\bristol

@@ -1,14 +1,7 @@
 #pragma once
 
-#include <vector>
-#include <map>
-#include <string>
-#include <stdint.h>
-
-#include <glm/glm.hpp>
-#include <glm/core/type_vec3.hpp>
-
-typedef uint8_t u8;
+#include "glm/glm.hpp"
+#include "glm/core/type_vec3.hpp"
 
 namespace citygen
 {
@@ -21,4 +14,65 @@ namespace citygen
   using glm::vec4;
   using glm::mat4;
   using glm::dot;
+}
+
+#pragma once
+
+namespace bristol
+{
+  class WindowEventManager;
+  class VirtualWindowManager;
+}
+
+namespace citygen
+{
+  class Editor
+  {
+  public:
+
+    struct StateFlagsF
+    {
+      enum Enum { Done = 1 << 0, Paused = 1 << 1, };
+      struct Bits { u32 done : 1; u32 paused : 1; };
+    };
+
+    typedef Flags<StateFlagsF> StateFlags;
+
+    static void Create();
+    static void Destroy();
+    static Editor& Instance();
+
+    bool Init();
+    bool Run();
+    bool Close();
+
+    Editor();
+    ~Editor();
+
+    void Update();
+    void Render();
+
+    bool OnLostFocus(const Event& event);
+    bool OnGainedFocus(const Event& event);
+    bool OnKeyPressed(const Event& event);
+    bool OnKeyReleased(const Event& event);
+    bool OnTextEntered(const Event& event);
+
+    bool OnMouseButtonReleased(const Event& event);
+
+    RenderWindow* _renderWindow;
+    WindowEventManager* _eventManager;
+    VirtualWindowManager* _virtualWindowManager;
+
+    static Editor* _instance;
+    string _appRoot;
+    //ptime _lastUpdate;
+    //time_duration _curTime;
+    //time_duration _fileWatchAcc;
+    StateFlags _stateFlags;
+
+    FileWatcher _fileWatcher;
+  };
+
+#define EDITOR Editor::Instance()
 }
