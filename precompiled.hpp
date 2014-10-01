@@ -1,3 +1,13 @@
+// glew & glfw
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#ifdef _MSC_VER
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#include <GLFW/glfw3native.h>
+#endif
+
 #include <atomic>
 #include <condition_variable>
 #include <algorithm>
@@ -17,6 +27,14 @@
 #include <sys/stat.h>
 #include <stdio.h>
 
+#include <GLFW/glfw3.h>
+
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/rotate_vector.hpp"
+#include "glm/gtc/matrix_inverse.hpp"
+
 #ifdef _WIN32
 #include <windows.h>
 #include <direct.h>
@@ -30,6 +48,7 @@
 #include <bristol/utils.hpp>
 #include <bristol/string_utils.hpp>
 #include <bristol/file_watcher.hpp>
+
 
 typedef uint8_t u8;
 typedef uint16_t u16;

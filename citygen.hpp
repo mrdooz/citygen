@@ -26,6 +26,7 @@ namespace bristol
 
 namespace citygen
 {
+  class Arcball;
 
   struct Terrain
   {
@@ -75,6 +76,7 @@ namespace citygen
 
     Terrain _terrain;
     FileWatcher _fileWatcher;
+    Arcball* _arcball;
   };
 
 #define CITYGEN CityGen::Instance()

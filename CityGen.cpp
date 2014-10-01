@@ -13,15 +13,7 @@ CityGen* CityGen::_instance;
 #include "imgui/stb_image.h"                  // for .png loading
 #include "imgui/imgui.h"
 
-// glew & glfw
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#ifdef _MSC_VER
-#define GLFW_EXPOSE_NATIVE_WIN32
-#define GLFW_EXPOSE_NATIVE_WGL
-#include <GLFW/glfw3native.h>
-#endif
+#include "arcball.hpp"
 
 static GLFWwindow* window;
 static GLuint fontTex;
@@ -122,8 +114,15 @@ static void glfw_error_callback(int error, const char* description)
 
 static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
+  CITYGEN._arcball->mouseButtonCallback( window, button, action, mods );
+
   if (action == GLFW_PRESS && button >= 0 && button < 2)
     mousePressed[button] = true;
+}
+
+static void glfw_cursor_callback( GLFWwindow *window, double x, double y )
+{
+  CITYGEN._arcball->cursorCallback(window, x, y);
 }
 
 static void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -164,8 +163,15 @@ void InitGL()
   glfwSetMouseButtonCallback(window, glfw_mouse_button_callback);
   glfwSetScrollCallback(window, glfw_scroll_callback);
   glfwSetCharCallback(window, glfw_char_callback);
+  glfwSetCursorPosCallback( window, glfw_cursor_callback );
+
 
   glewInit();
+
+  int w, h;
+  int fb_w, fb_h;
+  glfwGetWindowSize(window, &w, &h);
+  CITYGEN._arcball = new Arcball(w, h);
 }
 
 void InitImGui()
@@ -258,6 +264,7 @@ void UpdateImGui()
   // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
   double mouse_x, mouse_y;
   glfwGetCursorPos(window, &mouse_x, &mouse_y);
+
   io.MousePos = ImVec2((float)mouse_x * mousePosScale.x, (float)mouse_y * mousePosScale.y);      // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
   io.MouseDown[0] = mousePressed[0] || glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != 0;  // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
   io.MouseDown[1] = mousePressed[1] || glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != 0;
@@ -347,6 +354,7 @@ CityGen& CityGen::Instance()
 
 //----------------------------------------------------------------------------------
 CityGen::CityGen()
+  : _arcball(nullptr)
 {
   _stateFlags.Set(StateFlagsF::Paused);
 }
@@ -354,6 +362,7 @@ CityGen::CityGen()
 //----------------------------------------------------------------------------------
 CityGen::~CityGen()
 {
+  SAFE_DELETE(_arcball)
 }
 
 //----------------------------------------------------------------------------------
@@ -412,7 +421,12 @@ void CityGen::Render()
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  gluLookAt(0.5f, 300, 200.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+//  gluLookAt(0.5f, 300, 200.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+
+  glm::mat4 view = glm::lookAt( glm::vec3(0.0f, 300.0f, 200.0f), glm::vec3(0., 0., 0.), glm::vec3(0., 1., 0.) );
+  glm::mat4 rot = CITYGEN._arcball->createViewRotationMatrix();
+
+  glLoadMatrixf(glm::value_ptr(view * rot));
 
   glEnable(GL_LINE_SMOOTH);
   glLineWidth(1.2f);
