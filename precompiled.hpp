@@ -1,9 +1,3 @@
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
-#include <SFML/Network.hpp>
-#include <SFML/Window/Mouse.hpp>
-#include <SFML/OpenGL.hpp>
-
 #include <atomic>
 #include <condition_variable>
 #include <algorithm>
@@ -32,10 +26,6 @@
 #include <CoreGraphics/CGDirectDisplay.h>
 #endif
 
-#include <bristol/sfml/sfml_helpers.hpp>
-#include <bristol/sfml/window_event_manager.hpp>
-#include <bristol/sfml/virtual_window_manager.hpp>
-#include <bristol/sfml/virtual_window.hpp>
 #include <bristol/flags.hpp>
 #include <bristol/utils.hpp>
 #include <bristol/string_utils.hpp>
@@ -84,41 +74,6 @@ namespace citygen
   using std::min;
   using std::max;
 
-  using sf::Color;
-  using sf::Font;
-  using sf::Text;
-  using sf::Image;
-  using sf::Texture;
-  using sf::Sprite;
-  using sf::CircleShape;
-  using sf::RectangleShape;
-  using sf::RenderTarget;
-  using sf::RenderWindow;
-  using sf::RenderTexture;
-  using sf::Keyboard;
-  using sf::Event;
-  using sf::View;
-  using sf::Time;
-  using sf::Clock;
-  using sf::VertexArray;
-  using sf::Vertex;
-
-  using sf::Vector2f;
-  using sf::Vector3f;
-  using sf::Vector2i;
-  using sf::Vector2u;
-  using sf::IntRect;
-  using sf::FloatRect;
-  using sf::Transform;
-
-  using sf::IpAddress;
-  using sf::Socket;
-  using sf::TcpListener;
-  using sf::TcpSocket;
-
-  using bristol::WindowEventManager;
-  using bristol::VirtualWindowManager;
-  using bristol::VirtualWindow;
   using bristol::Flags;
   using bristol::FileWatcher;
 

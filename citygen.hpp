@@ -32,7 +32,7 @@ namespace citygen
     Terrain();
     void CreateMesh();
     vector<vec3> verts;
-    vector<GLuint> indices;
+    vector<u32> indices;
     u8* data;
     int w, h;
     int depth;
@@ -65,18 +65,6 @@ namespace citygen
 
     void Update();
     void Render();
-
-    bool OnLostFocus(const Event& event);
-    bool OnGainedFocus(const Event& event);
-    bool OnKeyPressed(const Event& event);
-    bool OnKeyReleased(const Event& event);
-    bool OnTextEntered(const Event& event);
-
-    bool OnMouseButtonReleased(const Event& event);
-
-    RenderWindow* _renderWindow;
-    WindowEventManager* _eventManager;
-    VirtualWindowManager* _virtualWindowManager;
 
     static CityGen* _instance;
     string _appRoot;

@@ -3,14 +3,9 @@ cmake_minimum_required (VERSION 2.6)
 project (citygen)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
-if (MSVC)
-  set(SFML_STATIC_LIBRARIES TRUE)
-endif()
-find_package(SFML 2 REQUIRED system window graphics)
 # todo, why is this required to be upper case?
-find_package(BRISTOL COMPONENTS main sfml)
+find_package(BRISTOL COMPONENTS main)
 
-include_directories(${SFML_INCLUDE_DIR})
 include_directories(${BRISTOL_INCLUDE_DIR})
 
 file(GLOB SRC "*.cpp" "*.hpp" "imgui/*")
@@ -23,6 +18,9 @@ if (APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v -std=c++11 -stdlib=libc++")
   find_library(APP_SERVICES ApplicationServices)
   find_library(OPEN_GL OpenGL)
+  find_library(COCOA Cocoa)
+  find_library(IOKIT IOKit)
+  find_library(CORE_VIDEO CoreVideo)
 
   set_target_properties(
     ${PROJECT_NAME}
@@ -34,11 +32,27 @@ if (APPLE)
 
   # specifically link against a protobuf and boost build with libc++
   target_link_libraries(${PROJECT_NAME}
-    ${SFML_LIBRARIES}
     "/Users/dooz/Library/Caches/appCode30/DerivedData/bristol-e7802bc5/Build/Products/Debug/libbristol_main.a"
     "/Users/dooz//Library/Caches/appCode30/DerivedData/bristol-e7802bc5/Build/Products/Debug/libbristol_sfml.a"
+    "/usr/local/Cellar/glew/1.10.0/lib/libGLEW.a"
+    "/usr/local/lib/libglfw3.a"
     ${OPEN_GL}
+    ${COCOA}
+    ${IOKIT}
+    ${CORE_VIDEO}
     ${APP_SERVICES} )
+
+  include_directories(
+    "/usr/local/Cellar/glew/1.10.0/include"
+    "/usr/local/include"
+  )
+
+  link_directories(
+    "/usr/local/Cellar/glew/1.10.0/lib"
+    "/usr/local/lib"
+  )
+
+
 else()
   if (MSVC)
     # glob all the root level .cpp files

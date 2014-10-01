@@ -1,18 +1,33 @@
 #include "citygen.hpp"
 
-#include <stdio.h>
-
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-
-static GLuint g_fontTex;
-u32 g_width, g_height;
-
 using namespace citygen;
-
 CityGen* CityGen::_instance;
 
-//----------------------------------------------------------------------------------
+#ifdef _MSC_VER
+#pragma warning (disable: 4996)         // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
+#include <Windows.h>
+#include <Imm.h>
+#endif
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "imgui/stb_image.h"                  // for .png loading
+#include "imgui/imgui.h"
+
+// glew & glfw
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#ifdef _MSC_VER
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#include <GLFW/glfw3native.h>
+#endif
+
+static GLFWwindow* window;
+static GLuint fontTex;
+static bool mousePressed[2] = { false, false };
+static ImVec2 mousePosScale(1.0f, 1.0f);
+
 // This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
 // If text or lines are blurry when integrating ImGui in your engine:
 // - in your Render function, try translating your projection matrix by (0.5f,0.5f) or (0.375f,0.375f)
@@ -36,8 +51,8 @@ static void ImImpl_RenderDrawLists(ImDrawList** const cmd_lists, int cmd_lists_c
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   // Setup texture
+  glBindTexture(GL_TEXTURE_2D, fontTex);
   glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, g_fontTex);
 
   // Setup orthographic projection matrix
   const float width = ImGui::GetIO().DisplaySize.x;
@@ -66,161 +81,190 @@ static void ImImpl_RenderDrawLists(ImDrawList** const cmd_lists, int cmd_lists_c
       vtx_offset += pcmd->vtx_count;
     }
   }
-
   glDisable(GL_SCISSOR_TEST);
   glDisableClientState(GL_COLOR_ARRAY);
   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-#if 0
+// NB: ImGui already provide OS clipboard support for Windows so this isn't needed if you are using Windows only.
 static const char* ImImpl_GetClipboardTextFn()
 {
-  // TODO: magnus
-  return nullptr;
-  //return glfwGetClipboardString(window);
+  return glfwGetClipboardString(window);
 }
 
-static void ImImpl_SetClipboardTextFn(const char* text, const char* text_end)
+static void ImImpl_SetClipboardTextFn(const char* text)
 {
-  // TODO: magnus
-/*
-  if (!text_end)
-    text_end = text + strlen(text);
-
-  if (*text_end == 0)
-  {
-    // Already got a zero-terminator at 'text_end', we don't need to add one
-    glfwSetClipboardString(window, text);
-  }
-  else
-  {
-    // Add a zero-terminator because glfw function doesn't take a size
-    char* buf = (char*)malloc(text_end - text + 1);
-    memcpy(buf, text, text_end-text);
-    buf[text_end-text] = '\0';
-    glfwSetClipboardString(window, buf);
-    free(buf);
-  }
-*/
+  glfwSetClipboardString(window, text);
 }
 
-
-// GLFW callbacks to get events
-// static void glfw_error_callback(int error, const char* description)
-// {
-//   fputs(description, stderr);
-// }
-// 
-// static void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-// {
-//   ImGuiIO& io = ImGui::GetIO();
-//   io.MouseWheel = (yoffset != 0.0f) ? yoffset > 0.0f ? 1 : -1 : 0;           // Mouse wheel: -1,0,+1
-// }
-// 
-// static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-// {
-//   ImGuiIO& io = ImGui::GetIO();
-//   if (action == GLFW_PRESS)
-//     io.KeysDown[key] = true;
-//   if (action == GLFW_RELEASE)
-//     io.KeysDown[key] = false;
-//   io.KeyCtrl = (mods & GLFW_MOD_CONTROL) != 0;
-//   io.KeyShift = (mods & GLFW_MOD_SHIFT) != 0;
-// }
-// 
-// static void glfw_char_callback(GLFWwindow* window, unsigned int c)
-// {
-//   if (c > 0 && c <= 255)
-//     ImGui::GetIO().AddInputCharacter((char)c);
-// }
-// 
-// // OpenGL code based on http://open.gl tutorials
-// void InitGL()
-// {
-//   glfwSetErrorCallback(glfw_error_callback);
-// 
-//   if (!glfwInit())
-//     exit(1);
-// 
-// //   glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-// //   window = glfwCreateWindow(1280, 720, "ImGui OpenGL example", NULL, NULL);
-// //   glfwMakeContextCurrent(window);
-// //   glfwSetKeyCallback(window, glfw_key_callback);
-// //   glfwSetScrollCallback(window, glfw_scroll_callback);
-// //   glfwSetCharCallback(window, glfw_char_callback);
-// // 
-// //   glewInit();
-// }
+#ifdef _MSC_VER
+// Notify OS Input Method Editor of text input position (e.g. when using Japanese/Chinese inputs, otherwise this isn't needed)
+static void ImImpl_ImeSetInputScreenPosFn(int x, int y)
+{
+    HWND hwnd = glfwGetWin32Window(window);
+    if (HIMC himc = ImmGetContext(hwnd))
+    {
+        COMPOSITIONFORM cf;
+        cf.ptCurrentPos.x = x;
+        cf.ptCurrentPos.y = y;
+        cf.dwStyle = CFS_FORCE_POSITION;
+        ImmSetCompositionWindow(himc, &cf);
+    }
+}
 #endif
 
-//----------------------------------------------------------------------------------
-void InitImGui()
+// GLFW callbacks to get events
+static void glfw_error_callback(int error, const char* description)
+{
+  fputs(description, stderr);
+}
+
+static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+  if (action == GLFW_PRESS && button >= 0 && button < 2)
+    mousePressed[button] = true;
+}
+
+static void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
   ImGuiIO& io = ImGui::GetIO();
-  io.DisplaySize = ImVec2((float)g_width, (float)g_height);        // Display size, in pixels. For clamping windows positions.
+  io.MouseWheel = (yoffset != 0.0f) ? yoffset > 0.0f ? 1 : - 1 : 0;           // Mouse wheel: -1,0,+1
+}
+
+static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+  ImGuiIO& io = ImGui::GetIO();
+  if (action == GLFW_PRESS)
+    io.KeysDown[key] = true;
+  if (action == GLFW_RELEASE)
+    io.KeysDown[key] = false;
+  io.KeyCtrl = (mods & GLFW_MOD_CONTROL) != 0;
+  io.KeyShift = (mods & GLFW_MOD_SHIFT) != 0;
+}
+
+static void glfw_char_callback(GLFWwindow* window, unsigned int c)
+{
+  if (c > 0 && c < 0x10000)
+    ImGui::GetIO().AddInputCharacter((unsigned short)c);
+}
+
+// OpenGL code based on http://open.gl tutorials
+void InitGL()
+{
+  glfwSetErrorCallback(glfw_error_callback);
+
+  if (!glfwInit())
+    exit(1);
+
+  glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+  window = glfwCreateWindow(1280, 720, "ImGui OpenGL example", NULL, NULL);
+  glfwMakeContextCurrent(window);
+  glfwSetKeyCallback(window, glfw_key_callback);
+  glfwSetMouseButtonCallback(window, glfw_mouse_button_callback);
+  glfwSetScrollCallback(window, glfw_scroll_callback);
+  glfwSetCharCallback(window, glfw_char_callback);
+
+  glewInit();
+}
+
+void InitImGui()
+{
+  int w, h;
+  int fb_w, fb_h;
+  glfwGetWindowSize(window, &w, &h);
+  glfwGetFramebufferSize(window, &fb_w, &fb_h);
+  mousePosScale.x = (float)fb_w / w;                  // Some screens e.g. Retina display have framebuffer size != from window size, and mouse inputs are given in window/screen coordinates.
+  mousePosScale.y = (float)fb_h / h;
+
+  ImGuiIO& io = ImGui::GetIO();
+  io.DisplaySize = ImVec2((float)fb_w, (float)fb_h);  // Display size, in pixels. For clamping windows positions.
   io.DeltaTime = 1.0f/60.0f;                          // Time elapsed since last frame, in seconds (in this sample app we'll override this every frame because our timestep is variable)
   io.PixelCenterOffset = 0.0f;                        // Align OpenGL texels
-  io.KeyMap[ImGuiKey_Tab] = sf::Keyboard::Tab;             // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
-  io.KeyMap[ImGuiKey_LeftArrow] = sf::Keyboard::Left;
-  io.KeyMap[ImGuiKey_RightArrow] = sf::Keyboard::Right;
-  io.KeyMap[ImGuiKey_UpArrow] = sf::Keyboard::Up;
-  io.KeyMap[ImGuiKey_DownArrow] = sf::Keyboard::Down;
-  io.KeyMap[ImGuiKey_Home] = sf::Keyboard::Home;
-  io.KeyMap[ImGuiKey_End] = sf::Keyboard::End;
-  io.KeyMap[ImGuiKey_Delete] = sf::Keyboard::Delete;
-  io.KeyMap[ImGuiKey_Backspace] = sf::Keyboard::BackSpace;
-  io.KeyMap[ImGuiKey_Enter] = sf::Keyboard::Return;
-  io.KeyMap[ImGuiKey_Escape] = sf::Keyboard::Escape;
-  io.KeyMap[ImGuiKey_A] = sf::Keyboard::A;
-  io.KeyMap[ImGuiKey_C] = sf::Keyboard::C;
-  io.KeyMap[ImGuiKey_V] = sf::Keyboard::V;
-  io.KeyMap[ImGuiKey_X] = sf::Keyboard::X;
-  io.KeyMap[ImGuiKey_Y] = sf::Keyboard::Y;
-  io.KeyMap[ImGuiKey_Z] = sf::Keyboard::Z;
+  io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;             // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
+  io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
+  io.KeyMap[ImGuiKey_RightArrow] = GLFW_KEY_RIGHT;
+  io.KeyMap[ImGuiKey_UpArrow] = GLFW_KEY_UP;
+  io.KeyMap[ImGuiKey_DownArrow] = GLFW_KEY_DOWN;
+  io.KeyMap[ImGuiKey_Home] = GLFW_KEY_HOME;
+  io.KeyMap[ImGuiKey_End] = GLFW_KEY_END;
+  io.KeyMap[ImGuiKey_Delete] = GLFW_KEY_DELETE;
+  io.KeyMap[ImGuiKey_Backspace] = GLFW_KEY_BACKSPACE;
+  io.KeyMap[ImGuiKey_Enter] = GLFW_KEY_ENTER;
+  io.KeyMap[ImGuiKey_Escape] = GLFW_KEY_ESCAPE;
+  io.KeyMap[ImGuiKey_A] = GLFW_KEY_A;
+  io.KeyMap[ImGuiKey_C] = GLFW_KEY_C;
+  io.KeyMap[ImGuiKey_V] = GLFW_KEY_V;
+  io.KeyMap[ImGuiKey_X] = GLFW_KEY_X;
+  io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
+  io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
 
   io.RenderDrawListsFn = ImImpl_RenderDrawLists;
-  //io.SetClipboardTextFn = ImImpl_SetClipboardTextFn;
-  //io.GetClipboardTextFn = ImImpl_GetClipboardTextFn;
+  io.SetClipboardTextFn = ImImpl_SetClipboardTextFn;
+  io.GetClipboardTextFn = ImImpl_GetClipboardTextFn;
+#ifdef _MSC_VER
+    io.ImeSetInputScreenPosFn = ImImpl_ImeSetInputScreenPosFn;
+#endif
 
   // Load font texture
-  glGenTextures(1, &g_fontTex);
-
-  glBindTexture(GL_TEXTURE_2D, g_fontTex);
+  glGenTextures(1, &fontTex);
+  glBindTexture(GL_TEXTURE_2D, fontTex);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+#if 1
+  // Default font (embedded in code)
   const void* png_data;
   unsigned int png_size;
   ImGui::GetDefaultFontData(NULL, NULL, &png_data, &png_size);
   int tex_x, tex_y, tex_comp;
   void* tex_data = stbi_load_from_memory((const unsigned char*)png_data, (int)png_size, &tex_x, &tex_y, &tex_comp, 0);
+  IM_ASSERT(tex_data != NULL);
+#else
+    // Custom font from filesystem
+    io.Font = new ImBitmapFont();
+    io.Font->LoadFromFile("../../extra_fonts/mplus-2m-medium_18.fnt");
+    IM_ASSERT(io.Font->IsLoaded());
+
+    int tex_x, tex_y, tex_comp;
+    void* tex_data = stbi_load("../../extra_fonts/mplus-2m-medium_18.png", &tex_x, &tex_y, &tex_comp, 0);
+    IM_ASSERT(tex_data != NULL);
+
+    // Automatically find white pixel from the texture we just loaded
+    // (io.FontTexUvForWhite needs to contains UV coordinates pointing to a white pixel in order to render solid objects)
+    for (int tex_data_off = 0; tex_data_off < tex_x*tex_y; tex_data_off++)
+        if (((unsigned int*)tex_data)[tex_data_off] == 0xffffffff)
+        {
+            io.FontTexUvForWhite = ImVec2((float)(tex_data_off % tex_x)/(tex_x), (float)(tex_data_off / tex_x)/(tex_y));
+            break;
+        }
+#endif
+
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_x, tex_y, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
   stbi_image_free(tex_data);
 }
 
-//----------------------------------------------------------------------------------
 void UpdateImGui()
 {
   ImGuiIO& io = ImGui::GetIO();
 
-  static sf::Clock ticker;
-  io.DeltaTime = max(.0001f, ticker.getElapsedTime().asSeconds());
+  // Setup timestep
+  static double time = 0.0f;
+  const double current_time =  glfwGetTime();
+  io.DeltaTime = (float)(current_time - time);
+  time = current_time;
 
   // Setup inputs
   // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
-  // TODO: handle keypresses etc
   double mouse_x, mouse_y;
-  Vector2i mousePos = sf::Mouse::getPosition(*CITYGEN._renderWindow);
-  mouse_x = mousePos.x;
-  mouse_y = mousePos.y;
-  io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);                           // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
-  io.MouseDown[0] = sf::Mouse::isButtonPressed(sf::Mouse::Left);
-  io.MouseDown[1] = sf::Mouse::isButtonPressed(sf::Mouse::Right);
+  glfwGetCursorPos(window, &mouse_x, &mouse_y);
+  io.MousePos = ImVec2((float)mouse_x * mousePosScale.x, (float)mouse_y * mousePosScale.y);      // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
+  io.MouseDown[0] = mousePressed[0] || glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != 0;  // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+  io.MouseDown[1] = mousePressed[1] || glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != 0;
 
   // Start the frame
   ImGui::NewFrame();
 }
-
 
 //----------------------------------------------------------------------------------
 Terrain::Terrain()
@@ -303,12 +347,6 @@ CityGen& CityGen::Instance()
 
 //----------------------------------------------------------------------------------
 CityGen::CityGen()
-  : _renderWindow(nullptr)
-  , _eventManager(nullptr)
-  , _virtualWindowManager(nullptr)
-  //, _lastUpdate(boost::posix_time::not_a_date_time)
-  //, _curTime(seconds(0))
-  //, _fileWatchAcc(seconds(0))
 {
   _stateFlags.Set(StateFlagsF::Paused);
 }
@@ -316,187 +354,57 @@ CityGen::CityGen()
 //----------------------------------------------------------------------------------
 CityGen::~CityGen()
 {
-  delete _renderWindow;
-  delete _eventManager;
-  delete _virtualWindowManager;
 }
 
 //----------------------------------------------------------------------------------
 bool CityGen::Init()
 {
-// 
+//
 //   _fileWatcher.AddFileWatch(GetAppRoot() + "config/editor_settings.pb", 0, true, 0, [this](const string& filename, void* token)
 //   {
 //     return LoadProto(filename.c_str(), &_settings);
 //   });
-// 
+//
 //   _fileWatcher.AddFileWatch(GetAppRoot() + "config/editor_styles.pb", 0, true, 0, [this](const string& filename, void* token)
 //   {
 //     return _styleFactory.Init(filename.c_str());
 //   });
-// 
-// 
+//
+//
 //   protocol::effect::plexus::PlexusConfig plexusSettings;
 //   if (!LoadProto("config/plexus1.pb", &plexusSettings, true))
 //     return false;
 
   //_plexus = FromProtocol(plexusSettings);
 
-#ifdef _WIN32
-  g_width = GetSystemMetrics(SM_CXFULLSCREEN);
-  g_height = GetSystemMetrics(SM_CYFULLSCREEN);
-#else
-  auto displayId = CGMainDisplayID();
-  g_width = CGDisplayPixelsWide(displayId);
-  g_height = CGDisplayPixelsHigh(displayId);
-  _appRoot = "/Users/dooz/projects/boba/editor/";
-#endif
-
-  g_width = (u32)(0.9f * g_width);
-  g_height = (u32)(0.9 * g_height);
-
-  sf::ContextSettings settings;
-  settings.majorVersion = 4;
-  settings.minorVersion = 1;
-  _renderWindow = new RenderWindow(sf::VideoMode(g_width, g_height), "...", sf::Style::Default, settings);
-  _renderWindow->setVerticalSyncEnabled(true);
-  _eventManager = new WindowEventManager(_renderWindow);
-
-  _eventManager->RegisterHandler(Event::KeyPressed, bind(&CityGen::OnKeyPressed, this, _1));
-  _eventManager->RegisterHandler(Event::KeyReleased, bind(&CityGen::OnKeyReleased, this, _1));
-  _eventManager->RegisterHandler(Event::TextEntered, bind(&CityGen::OnTextEntered, this, _1));
-  _eventManager->RegisterHandler(Event::LostFocus, bind(&CityGen::OnLostFocus, this, _1));
-  _eventManager->RegisterHandler(Event::GainedFocus, bind(&CityGen::OnGainedFocus, this, _1));
-  _eventManager->RegisterHandler(Event::MouseButtonReleased, bind(&CityGen::OnMouseButtonReleased, this, _1));
-
-  // add the editor windows
-  {
-    _virtualWindowManager = new VirtualWindowManager(_renderWindow, _eventManager);
-
-    float w = (float)g_width/4;
-    float h = (float)g_height/2;
-  }
-
   _terrain.data = stbi_load("/Users/dooz/projects/citygen/noise.tga", &_terrain.w, &_terrain.h, &_terrain.depth, 0);
   _terrain.CreateMesh();
 
-  //    int x,y,n;
-//    unsigned char *data = stbi_load(filename, &x, &y, &n, 0);
-//    // ... process data if not NULL ...
-//    // ... x = width, y = height, n = # 8-bit components per pixel ...
-//    // ... replace '0' with '1'..'4' to force that many components per pixel
-//    // ... but 'n' will always be the number that it would have been if you said 0
-//    stbi_image_free(data)
-
+  InitGL();
   InitImGui();
 
   return true;
 }
 
 //----------------------------------------------------------------------------------
-bool CityGen::OnLostFocus(const Event& event)
-{
-  return false;
-}
-
-//----------------------------------------------------------------------------------
-bool CityGen::OnGainedFocus(const Event& event)
-{
-  return false;
-}
-
-//----------------------------------------------------------------------------------
-bool CityGen::OnKeyPressed(const Event& event)
-{
-  Keyboard::Key key = event.key.code;
-
-  ImGuiIO& io = ImGui::GetIO();
-  io.KeysDown[key] = true;
-
-  //   ImGuiIO& io = ImGui::GetIO();
-  //   if (action == GLFW_PRESS)
-  //     io.KeysDown[key] = true;
-  //   if (action == GLFW_RELEASE)
-  //     io.KeysDown[key] = false;
-  //   io.KeyCtrl = (mods & GLFW_MOD_CONTROL) != 0;
-  //   io.KeyShift = (mods & GLFW_MOD_SHIFT) != 0;
-
-  switch (key)
-  {
-    case Keyboard::Escape: _stateFlags.Set(StateFlagsF::Done); return true;
-  }
-  return false;
-}
-
-//----------------------------------------------------------------------------------
-bool CityGen::OnTextEntered(const Event& event)
-{
-  u32 c = event.text.unicode;
-  if (c <= 255)
-    ImGui::GetIO().AddInputCharacter((char)c);
-
-  return false;
-}
-
-//----------------------------------------------------------------------------------
-bool CityGen::OnKeyReleased(const Event& event)
-{
-  Keyboard::Key key = event.key.code;
-
-  ImGuiIO& io = ImGui::GetIO();
-  io.KeysDown[key] = false;
-
-  switch (key)
-  {
-    case Keyboard::Key::Space: _stateFlags.Toggle(StateFlagsF::Paused); return true;
-  }
-
-  return false;
-}
-
-//----------------------------------------------------------------------------------
-bool CityGen::OnMouseButtonReleased(const Event& event)
-{
-  return false;
-}
-
-//----------------------------------------------------------------------------------
 void CityGen::Update()
 {
-//   ptime now = microsec_clock::local_time();
-// 
-//   WebbyServerUpdate(_server);
-// 
-//   if (_lastUpdate.is_not_a_date_time())
-//     _lastUpdate = now;
-// 
-//   time_duration delta = now - _lastUpdate;
-//   _fileWatchAcc += delta;
-// 
-//   if (_fileWatchAcc > seconds(1))
-//   {
-//     _fileWatchAcc -= seconds(1);
-//     _fileWatcher.Tick();
-//   }
-//   _lastUpdate = now;
-// 
-//   if (!_stateFlags.IsSet(StateFlagsF::Paused))
-//   {
-//     _curTime += delta;
-//   }
-
-  _eventManager->Poll();
-  _virtualWindowManager->Update();
+  ImGuiIO& io = ImGui::GetIO();
+  mousePressed[0] = mousePressed[1] = false;
+  io.MouseWheel = 0;
+  glfwPollEvents();
+  UpdateImGui();
 }
 
 //----------------------------------------------------------------------------------
 void CityGen::Render()
 {
-  _renderWindow->clear();
+  ImGuiIO& io = ImGui::GetIO();
 
-  UpdateImGui();
-
-//  _renderWindow->pushGLStates();
+  // Rendering
+  glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+  glClearColor(0.8f, 0.6f, 0.6f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -505,10 +413,6 @@ void CityGen::Render()
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   gluLookAt(0.5f, 300, 200.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-
-//  glEnable(GL_DEPTH_TEST);
-//  glDepthFunc(GL_LEQUAL);
-//  glEnable(GL_CULL_FACE);
 
   glEnable(GL_LINE_SMOOTH);
   glLineWidth(1.2f);
@@ -521,14 +425,11 @@ void CityGen::Render()
   glDrawElements(GL_TRIANGLES, _terrain.indices.size(), GL_UNSIGNED_INT, _terrain.indices.data());
   glDisableClientState(GL_VERTEX_ARRAY);
 
-//  _virtualWindowManager->Draw();
-//  _renderWindow->popGLStates();
-
-//  _renderWindow->resetGLStates();
   static bool open = true;
   ImGui::Begin("Properties", &open, ImVec2(200, 100));
 
-  if (ImGui::InputFloat("scale", &_terrain.scale, 1) || ImGui::InputFloat("h-scale", &_terrain.heightScale, 0.1f))
+  if (ImGui::InputFloat("scale", &_terrain.scale, 1)
+   || ImGui::InputFloat("h-scale", &_terrain.heightScale, 0.1f))
   {
     _terrain.scale = max(1.f, min(100.f, _terrain.scale));
     _terrain.heightScale = max(0.1f, min(5.f, _terrain.heightScale));
@@ -538,14 +439,13 @@ void CityGen::Render()
   ImGui::End();
 
   ImGui::Render();
-
-  _renderWindow->display();
+  glfwSwapBuffers(window);
 }
 
 //----------------------------------------------------------------------------------
 bool CityGen::Run()
 {
-  while (_renderWindow->isOpen() && !_stateFlags.IsSet(StateFlagsF::Done))
+  while (!glfwWindowShouldClose(window))
   {
     Update();
     Render();
@@ -557,6 +457,9 @@ bool CityGen::Run()
 //----------------------------------------------------------------------------------
 bool CityGen::Close()
 {
+  ImGui::Shutdown();
+  glfwTerminate();
+
   return true;
 }
 
@@ -576,365 +479,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-
-//---------------------------------------------------------------------------------
-//
-vec4 Unproject(const vec4& v, const mat4& view, const mat4& proj)
-{
-  mat4 inv = glm::inverse(proj * view);
-  return inv * v;
-}
-
-#if 0
-  static void RenderFrame()
-  {
-    glClearColor(0 / 255.0f, 0x2b / 255.0f, 0x36 / 255.0f, 1.0f);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-    // ---- UI
-
-    imguiBeginFrame(mouseX, height - 1 - mouseY, mouseButtons, 0);
-
-    static const int paramSize = 200;
-    static int paramScroll = 0;
-    imguiBeginScrollArea("Params", 0, height - paramSize, width, paramSize, &paramScroll);
-
-    static float xPos = 0.0f;
-    imguiSlider("xPos", &xPos, -1000, 1000.0f, 1);
-
-    static float yPos = 20.0f;
-    imguiSlider("yPos", &yPos, -1000, 1000.0f, 1);
-
-    static float zPos = 1000.0f;
-    imguiSlider("zPos", &zPos, 1, 1000.0f, 1);
-
-    char buf[256];
-    sprintf(buf, "mouse: %d, %d", mouseX, mouseY);
-    imguiLabel(buf);
-
-    float nearPlane = 2;
-    float farPlane = 10000;
-
-    vec3 pos(xPos, yPos, zPos);
-    mat4 view = glm::lookAt(pos, vec3(0, 0, 0), vec3(0, 1, 0));
-    mat4 proj = glm::perspective(45.0f, 4.0f / 3.0f, nearPlane, farPlane);
-
-    vec4 r = proj * vec4(0,0,-nearPlane, 1);
-
-    vec2 vecNdc((2.0f * mouseX) / width - 1, 1.0f - (2.0f * mouseY) / height);
-    vec4 vecClip(vecNdc.x, vecNdc.y, -1, 1);
-
-    // multiply by the perspective divide
-    vecClip *= nearPlane;
-
-    vec4 nearPos = Unproject(vecClip, view, proj);
-    vec3 np(nearPos.x, nearPos.y, nearPos.z);
-    vec3 d = glm::normalize(np - pos);
-
-    // check if the ray intersects the sphere
-    float a = dot(d,d);
-    float b = 2 * dot(pos - sphereCenter, d);
-    float c = dot(pos - sphereCenter, pos - sphereCenter) - sphereRadius * sphereRadius;
-
-    bool hit = false;
-    float t1=0, t2=0;
-    float discriminant = sqrtf(b*b - 4*a*c);
-    if (discriminant > 0)
-    {
-      hit = true;
-      t1 = (-b - discriminant) / (2*a);
-      t2 = (-b + discriminant) / (2*a);
-    }
-
-    sprintf(buf, "dir: %f, %f, %f. t: %f, hit: %s", d.x, d.y, d.z, min(t1,t2), hit ? "Y" : "N");
-    imguiLabel(buf);
-
-    imguiEndScrollArea();
-    imguiEndFrame();
-
-    // render stuff
-    glUseProgram(shaderProgram);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(glm::value_ptr(proj));
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(glm::value_ptr(view));
-
-    glPointSize(2);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, heightVbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glDrawArrays(GL_POINTS, 0, 256*256);
-
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glDrawArrays(GL_POINTS, 0, 10000);
-
-    glLineWidth(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, lineVbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    if (vec3* ptr = (vec3*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY))
-    {
-      ptr[0] = np;
-      ptr[1] + np + 10.0f * d;
-      glUnmapBuffer(GL_ARRAY_BUFFER);
-    }
-
-    glDrawArrays(GL_LINES, 0, 2);
-
-    glUseProgram(0);
-
-    // back to GUI
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glDisable(GL_DEPTH_TEST);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, width, 0, height, -1.0f, 1.0f);
-
-    imguiRenderGLDraw();
-
-    glDisable(GL_BLEND);
-
-    SDL_GL_SwapWindow(displayWindow);
-  }
-
-  //---------------------------------------------------------------------------------
-  //
-  bool Init()
-  {
-    // find the app.root
-    string cur = CurrentDirectory();
-    string prev = cur;
-    while (true)
-    {
-      if (FileExists("app.root"))
-      {
-        break;
-      }
-
-      chdir("..");
-
-      // break if at the root
-      string tmp = CurrentDirectory();
-      if (tmp == prev)
-      {
-        break;
-      }
-      prev = tmp;
-    }
-
-    return true;
-  }
-
-  //---------------------------------------------------------------------------------
-  //
-  GLuint loadShader(const char* filename, GLuint type)
-  {
-    GLuint shader = glCreateShader(type);
-    vector<char> buf;
-    if (LoadTextFile(filename, &buf) != Error::OK)
-    {
-      return -1;
-    }
-
-    const char* data = buf.data();
-    glShaderSource(shader, 1, &data, NULL);
-    glCompileShader(shader);
-
-    GLint compiled;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-    if (!compiled)
-    {
-      GLint length;
-      glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-      vector<char> buf(length);
-      glGetShaderInfoLog(shader, length, &length, buf.data());
-      printf("%s", buf.data());
-    }
-
-    return shader;
-  }
-
-  //---------------------------------------------------------------------------------
-  //
-  Error InitShaders()
-  {
-    shaderProgram   = glCreateProgram();
-    vertexShader    = loadShader("simple.vert.glsl", GL_VERTEX_SHADER);
-    fragmentShader  = loadShader("simple.frag.glsl", GL_FRAGMENT_SHADER);
-
-    if (vertexShader == -1 || fragmentShader == -1)
-    {
-      return Error::INVALID_SHADER;
-    }
-
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-
-    glLinkProgram(shaderProgram);
-    return Error::OK;
-  }
-
-  //---------------------------------------------------------------------------------
-  //
-  void GenerateSphere()
-  {
-    vector<vec3> verts;
-
-    while (verts.size() < 10000)
-    {
-      float x = -1 + 2 * (rand() / (float)RAND_MAX);
-      float y = -1 + 2 * (rand() / (float)RAND_MAX);
-      float z = -1 + 2 * (rand() / (float)RAND_MAX);
-
-      vec3 p(x,y,z);
-      p *= sphereRadius;
-
-      if (glm::length(p) < sphereRadius)
-      {
-        verts.push_back(p + sphereCenter);
-      }
-    }
-
-    glGenBuffers(1, &sphereVbo);
-    glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
-    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(vec3), verts.data(), GL_STATIC_DRAW);
-  }
-
-  //---------------------------------------------------------------------------------
-  //
-  Error CreateHeightField()
-  {
-    vector<u8> buf;
-    Error err = LoadFile("noise.tga", &buf);
-    if (err != Error::OK)
-      return err;
-
-    vector<vec3> verts;
-    int width = 256;
-    int height = 256;
-
-    u8* data = &buf[18];
-
-    float gridSpacing = 10;
-    float zPos = -(width/2 - 0.5f) * gridSpacing;
-
-    // store height info
-    for (int y = 0; y < height; ++y)
-    {
-      float xPos = -(width/2 - 0.5f) * gridSpacing;
-      for (int x = 0; x < width; ++x)
-      {
-        float h = data[(x+y*width)*4];
-        verts.push_back(vec3(xPos, h, zPos));
-        xPos += gridSpacing;
-      }
-      zPos += gridSpacing;
-    }
-
-    glGenBuffers(1, &heightVbo);
-    glBindBuffer(GL_ARRAY_BUFFER, heightVbo);
-    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(vec3), verts.data(), GL_STATIC_DRAW);
-
-    return Error::OK;
-  }
-}
-
-
-int main(int argc, char** argv)
-{
-  using namespace citygen;
-  Init();
-  width = 1024;
-  height = 768;
-  SDL_SetMainReady();
-  SDL_Init(SDL_INIT_VIDEO);
-  displayWindow = SDL_CreateWindow(
-    "SDL2/OpenGL Demo", 100, 100, width, height, 
-    SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-
-  SDL_GLContext glcontext = SDL_GL_CreateContext(displayWindow);
-  glViewport(0, 0, width, height);
-
-  GLuint res = glewInit();
-  if (res != GLEW_OK)
-  {
-    return 1;
-  }
-
-  imguiRenderGLInit("calibri.ttf");
-
-  Error err = InitShaders();
-  if (err != Error::OK)
-  {
-    return (int)err;
-  }
-
-  if (CreateHeightField() != Error::OK)
-    return 1;
-
-  GenerateSphere();
-
-  glGenBuffers(1, &lineVbo);
-  glBindBuffer(GL_ARRAY_BUFFER, lineVbo);
-  glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
-
-  bool quit = false;
-  while (!quit)
-  {
-    SDL_Event event;
-    while(SDL_PollEvent(&event))
-    {
-      switch (event.type)
-      {
-      case SDL_QUIT:
-        quit = true;
-        break;
-
-      case SDL_MOUSEMOTION:
-        mouseX = event.motion.x;
-        mouseY = event.motion.y;
-        break;
-
-      case SDL_MOUSEBUTTONDOWN:
-        if (event.button.button == SDL_BUTTON_LEFT)
-        {
-          mouseButtons |= 1;
-        }
-        else if (event.button.button == SDL_BUTTON_RIGHT)
-        {
-          mouseButtons |= 2;
-        }
-        break;
-
-      case SDL_MOUSEBUTTONUP:
-        if (event.button.button == SDL_BUTTON_LEFT)
-        {
-          mouseButtons &= ~1;
-        }
-        else if (event.button.button == SDL_BUTTON_RIGHT)
-        {
-          mouseButtons &= ~2;
-        }
-        break;
-      }
-    }
-    RenderFrame();
-  }
-
-  SDL_GL_DeleteContext(glcontext);
-  SDL_Quit();
-
-  return 0;
-}
-#endif
