@@ -33,6 +33,7 @@ static void ImImpl_RenderDrawLists(ImDrawList** const cmd_lists, int cmd_lists_c
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
   glEnableClientState(GL_COLOR_ARRAY);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   // Setup texture
   glEnable(GL_TEXTURE_2D);
@@ -220,6 +221,62 @@ void UpdateImGui()
   ImGui::NewFrame();
 }
 
+
+//----------------------------------------------------------------------------------
+Terrain::Terrain()
+{
+  memset(this, 0, sizeof(Terrain));
+  scale = 10;
+  heightScale = 1;
+}
+
+//----------------------------------------------------------------------------------
+void Terrain::CreateMesh()
+{
+  indices.resize((w-1) * (h-1) * 2 * 3);
+  verts.resize(w*h);
+  vec3* vertPtr = verts.data();
+  u32* indPtr = indices.data();
+
+  float z = -(h-1)/2.f * scale;
+  u8* ptr = data;
+
+  for (int i = 0; i < h; ++i)
+  {
+    float x = -(w-1)/2.f * scale;
+    for (int j = 0; j < w; ++j)
+    {
+      float y = (ptr[0] + ptr[1] + ptr[2]) / 3.f * heightScale;
+
+      *vertPtr++ = vec3(x, y, z);
+
+      if (i < h-1 && j < w-1)
+      {
+        // v1-v2
+        // v0-v3
+        u32 v0 = (i+0)*w+(j+0);
+        u32 v1 = (i+1)*w+(j+0);
+        u32 v2 = (i+1)*w+(j+1);
+        u32 v3 = (i+0)*w+(j+1);
+
+        indPtr[0] = v0;
+        indPtr[1] = v1;
+        indPtr[2] = v2;
+
+        indPtr[3] = v0;
+        indPtr[4] = v2;
+        indPtr[5] = v3;
+
+        indPtr += 6;
+      }
+
+      ptr += 4;
+      x += scale;
+    }
+    z += scale;
+  }
+}
+
 //----------------------------------------------------------------------------------
 void CityGen::Create()
 {
@@ -299,6 +356,8 @@ bool CityGen::Init()
   g_height = (u32)(0.9 * g_height);
 
   sf::ContextSettings settings;
+  settings.majorVersion = 4;
+  settings.minorVersion = 1;
   _renderWindow = new RenderWindow(sf::VideoMode(g_width, g_height), "...", sf::Style::Default, settings);
   _renderWindow->setVerticalSyncEnabled(true);
   _eventManager = new WindowEventManager(_renderWindow);
@@ -317,6 +376,17 @@ bool CityGen::Init()
     float w = (float)g_width/4;
     float h = (float)g_height/2;
   }
+
+  _terrain.data = stbi_load("/Users/dooz/projects/citygen/noise.tga", &_terrain.w, &_terrain.h, &_terrain.depth, 0);
+  _terrain.CreateMesh();
+
+  //    int x,y,n;
+//    unsigned char *data = stbi_load(filename, &x, &y, &n, 0);
+//    // ... process data if not NULL ...
+//    // ... x = width, y = height, n = # 8-bit components per pixel ...
+//    // ... replace '0' with '1'..'4' to force that many components per pixel
+//    // ... but 'n' will always be the number that it would have been if you said 0
+//    stbi_image_free(data)
 
   InitImGui();
 
@@ -426,14 +496,46 @@ void CityGen::Render()
 
   UpdateImGui();
 
-  _renderWindow->pushGLStates();
-  _virtualWindowManager->Draw();
-  _renderWindow->popGLStates();
+//  _renderWindow->pushGLStates();
 
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluPerspective(60.0f, 1.333f, 1.f, 1000.0f);
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  gluLookAt(0.5f, 300, 200.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+
+//  glEnable(GL_DEPTH_TEST);
+//  glDepthFunc(GL_LEQUAL);
+//  glEnable(GL_CULL_FACE);
+
+  glEnable(GL_LINE_SMOOTH);
+  glLineWidth(1.2f);
+
+  glColor4ub(0xfd, 0xf6, 0xe3, 255);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glVertexPointer(3, GL_FLOAT, 0, _terrain.verts.data());
+  glDrawElements(GL_TRIANGLES, _terrain.indices.size(), GL_UNSIGNED_INT, _terrain.indices.data());
+  glDisableClientState(GL_VERTEX_ARRAY);
+
+//  _virtualWindowManager->Draw();
+//  _renderWindow->popGLStates();
+
+//  _renderWindow->resetGLStates();
   static bool open = true;
   ImGui::Begin("Properties", &open, ImVec2(200, 100));
-  ImGui::End();
 
+  if (ImGui::InputFloat("scale", &_terrain.scale, 1) || ImGui::InputFloat("h-scale", &_terrain.heightScale, 0.1f))
+  {
+    _terrain.scale = max(1.f, min(100.f, _terrain.scale));
+    _terrain.heightScale = max(0.1f, min(5.f, _terrain.heightScale));
+    _terrain.CreateMesh();
+  }
+
+  ImGui::End();
 
   ImGui::Render();
 

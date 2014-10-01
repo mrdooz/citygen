@@ -26,6 +26,20 @@ namespace bristol
 
 namespace citygen
 {
+
+  struct Terrain
+  {
+    Terrain();
+    void CreateMesh();
+    vector<vec3> verts;
+    vector<GLuint> indices;
+    u8* data;
+    int w, h;
+    int depth;
+    float scale;
+    float heightScale;
+  };
+
   class CityGen
   {
   public:
@@ -71,6 +85,7 @@ namespace citygen
     //time_duration _fileWatchAcc;
     StateFlags _stateFlags;
 
+    Terrain _terrain;
     FileWatcher _fileWatcher;
   };
 
