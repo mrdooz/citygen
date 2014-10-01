@@ -28,12 +28,20 @@ namespace citygen
 {
   class Arcball;
 
+  struct Tri
+  {
+    vec3 v0, v1, v2;
+  };
+
   struct Terrain
   {
     Terrain();
     void CreateMesh();
+    void CalcIntersection(const vec3& org, const vec3& dir);
     vector<vec3> verts;
+    vector<Tri> tris;
     vector<u32> indices;
+    vector<Tri> intersected;
     u8* data;
     int w, h;
     int depth;

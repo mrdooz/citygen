@@ -17,11 +17,13 @@ CityGen* CityGen::_instance;
 #include "imgui/imgui.h"
 
 #include "arcball.hpp"
+#include "glm/gtx/intersect.hpp"
 
 static GLFWwindow* g_window;
 static int g_windowWidth = 1280;
 static int g_windowHeight = 720;
 mat4 g_view, g_proj;
+vec3 g_cameraPos;
 
 static GLuint fontTex;
 static bool mousePressed[2] = { false, false };
@@ -135,7 +137,9 @@ static void glfw_cursor_callback(GLFWwindow *window, double x, double y)
   glm::vec4 viewport = glm::vec4(0, 0, g_windowWidth, g_windowHeight);
   glm::vec3 wincoord = glm::vec3(x, g_windowHeight - y - 1, depth);
   glm::vec3 objcoord = glm::unProject(wincoord, g_view, g_proj, viewport);
-  int a = 10;
+
+  vec3 dir = glm::normalize(objcoord - g_cameraPos);
+  CITYGEN._terrain.CalcIntersection(g_cameraPos, dir);
 }
 
 static void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -298,6 +302,7 @@ Terrain::Terrain()
 void Terrain::CreateMesh()
 {
   indices.resize((w-1) * (h-1) * 2 * 3);
+  tris.resize((w-1) * (h-1) * 2);
   verts.resize(w*h);
   vec3* vertPtr = verts.data();
   u32* indPtr = indices.data();
@@ -338,6 +343,46 @@ void Terrain::CreateMesh()
       x += scale;
     }
     z += scale;
+  }
+
+
+  // calc tris
+  Tri* triPtr = tris.data();
+  for (int i = 0; i < h-1; ++i)
+  {
+    for (int j = 0; j < w - 1; ++j)
+    {
+      // v1-v2
+      // v0-v3
+      u32 v0 = (i+0)*w+(j+0);
+      u32 v1 = (i+1)*w+(j+0);
+      u32 v2 = (i+1)*w+(j+1);
+      u32 v3 = (i+0)*w+(j+1);
+
+      triPtr->v0 = verts[v0];
+      triPtr->v1 = verts[v1];
+      triPtr->v2 = verts[v2];
+      triPtr++;
+
+      triPtr->v0 = verts[v0];
+      triPtr->v1 = verts[v2];
+      triPtr->v2 = verts[v3];
+      triPtr++;
+    }
+  }
+}
+
+//----------------------------------------------------------------------------------
+void Terrain::CalcIntersection(const vec3& org, const vec3& dir)
+{
+  intersected.clear();
+  for (const Tri& tri : tris)
+  {
+    vec3 pos;
+    if (glm::intersectLineTriangle(org, dir, tri.v0, tri.v1, tri.v2, pos))
+    {
+      intersected.push_back(tri);
+    }
   }
 }
 
@@ -438,20 +483,32 @@ void CityGen::Render()
   glLoadMatrixf(glm::value_ptr(g_proj));
 
   glMatrixMode(GL_MODELVIEW);
-  mat4 dir = glm::lookAt( glm::vec3(0.0f, 300.0f, 200.0f), glm::vec3(0., 0., 0.), glm::vec3(0., 1., 0.) );
+  g_cameraPos = glm::vec3(0.0f, 300.0f, 200.0f);
+  mat4 dir = glm::lookAt(g_cameraPos, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0) );
   mat4 rot = CITYGEN._arcball->createViewRotationMatrix();
-  g_view = dir * rot;
+  g_view = rot * dir;
   glLoadMatrixf(glm::value_ptr(g_view));
 
   glEnable(GL_LINE_SMOOTH);
   glLineWidth(1.2f);
 
-  glColor4ub(0xfd, 0xf6, 0xe3, 255);
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   glEnableClientState(GL_VERTEX_ARRAY);
+
+  // draw terrain
+  glColor4ub(0xfd, 0xf6, 0xe3, 255);
   glVertexPointer(3, GL_FLOAT, 0, _terrain.verts.data());
   glDrawElements(GL_TRIANGLES, _terrain.indices.size(), GL_UNSIGNED_INT, _terrain.indices.data());
+
+  // draw intersected tris
+  if (!_terrain.intersected.empty())
+  {
+    glColor4ub(0xfd, 0xf6, 0x0, 255);
+    glVertexPointer(3, GL_FLOAT, 0, _terrain.intersected.data());
+    glDrawArrays(GL_TRIANGLES, 0, _terrain.intersected.size() * 3);
+  }
+
   glDisableClientState(GL_VERTEX_ARRAY);
 
   static bool open = true;
