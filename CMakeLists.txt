@@ -52,11 +52,19 @@ if (APPLE)
     "/usr/local/lib"
   )
 
-
 else()
   if (MSVC)
     # glob all the root level .cpp files
     file(GLOB ROOT_SRC "*.cpp")
+
+    include_directories(
+      "/projects/glew-1.10.0/include"
+      "/projects/glfw/include"
+    )
+
+    link_directories(
+      "/projects/glfw/src/debug"
+    )
 
     # add precompiled header, and force include it on all the root level .cpp files
     foreach( src_file ${ROOT_SRC} )
@@ -70,7 +78,6 @@ else()
       STRING(REPLACE "/MD"  "/MT" "${flag}" "${${flag}}")
       SET("${flag}" "${${flag}}")
     endforeach()
-    
    
     target_link_libraries(${PROJECT_NAME}
       debug ${SFML_GRAPHICS_LIBRARY_DEBUG} optimized ${SFML_GRAPHICS_LIBRARY_RELEASE}

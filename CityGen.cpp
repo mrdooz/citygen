@@ -7,6 +7,9 @@ CityGen* CityGen::_instance;
 #pragma warning (disable: 4996)         // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
 #include <Windows.h>
 #include <Imm.h>
+#pragma comment(lib, "glu32.lib")
+#pragma comment(lib, "imm32.lib")
+#pragma comment(lib, "/projects/glfw/src/debug/glfw3.lib")
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -15,7 +18,11 @@ CityGen* CityGen::_instance;
 
 #include "arcball.hpp"
 
-static GLFWwindow* window;
+static GLFWwindow* g_window;
+static int g_windowWidth = 1280;
+static int g_windowHeight = 720;
+mat4 g_view, g_proj;
+
 static GLuint fontTex;
 static bool mousePressed[2] = { false, false };
 static ImVec2 mousePosScale(1.0f, 1.0f);
@@ -82,19 +89,19 @@ static void ImImpl_RenderDrawLists(ImDrawList** const cmd_lists, int cmd_lists_c
 // NB: ImGui already provide OS clipboard support for Windows so this isn't needed if you are using Windows only.
 static const char* ImImpl_GetClipboardTextFn()
 {
-  return glfwGetClipboardString(window);
+  return glfwGetClipboardString(g_window);
 }
 
 static void ImImpl_SetClipboardTextFn(const char* text)
 {
-  glfwSetClipboardString(window, text);
+  glfwSetClipboardString(g_window, text);
 }
 
 #ifdef _MSC_VER
 // Notify OS Input Method Editor of text input position (e.g. when using Japanese/Chinese inputs, otherwise this isn't needed)
 static void ImImpl_ImeSetInputScreenPosFn(int x, int y)
 {
-    HWND hwnd = glfwGetWin32Window(window);
+    HWND hwnd = glfwGetWin32Window(g_window);
     if (HIMC himc = ImmGetContext(hwnd))
     {
         COMPOSITIONFORM cf;
@@ -120,9 +127,15 @@ static void glfw_mouse_button_callback(GLFWwindow* window, int button, int actio
     mousePressed[button] = true;
 }
 
-static void glfw_cursor_callback( GLFWwindow *window, double x, double y )
+static void glfw_cursor_callback(GLFWwindow *window, double x, double y)
 {
-  CITYGEN._arcball->cursorCallback(window, x, y);
+  CITYGEN._arcball->cursorCallback(g_window, x, y);
+
+  float depth = 1;
+  glm::vec4 viewport = glm::vec4(0, 0, g_windowWidth, g_windowHeight);
+  glm::vec3 wincoord = glm::vec3(x, g_windowHeight - y - 1, depth);
+  glm::vec3 objcoord = glm::unProject(wincoord, g_view, g_proj, viewport);
+  int a = 10;
 }
 
 static void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -157,20 +170,20 @@ void InitGL()
     exit(1);
 
   glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-  window = glfwCreateWindow(1280, 720, "ImGui OpenGL example", NULL, NULL);
-  glfwMakeContextCurrent(window);
-  glfwSetKeyCallback(window, glfw_key_callback);
-  glfwSetMouseButtonCallback(window, glfw_mouse_button_callback);
-  glfwSetScrollCallback(window, glfw_scroll_callback);
-  glfwSetCharCallback(window, glfw_char_callback);
-  glfwSetCursorPosCallback( window, glfw_cursor_callback );
+  g_window = glfwCreateWindow(g_windowWidth, g_windowHeight, "ImGui OpenGL example", NULL, NULL);
+  glfwMakeContextCurrent(g_window);
+  glfwSetKeyCallback(g_window, glfw_key_callback);
+  glfwSetMouseButtonCallback(g_window, glfw_mouse_button_callback);
+  glfwSetScrollCallback(g_window, glfw_scroll_callback);
+  glfwSetCharCallback(g_window, glfw_char_callback);
+  glfwSetCursorPosCallback(g_window, glfw_cursor_callback);
 
 
   glewInit();
 
   int w, h;
   int fb_w, fb_h;
-  glfwGetWindowSize(window, &w, &h);
+  glfwGetWindowSize(g_window, &w, &h);
   CITYGEN._arcball = new Arcball(w, h);
 }
 
@@ -178,8 +191,8 @@ void InitImGui()
 {
   int w, h;
   int fb_w, fb_h;
-  glfwGetWindowSize(window, &w, &h);
-  glfwGetFramebufferSize(window, &fb_w, &fb_h);
+  glfwGetWindowSize(g_window, &w, &h);
+  glfwGetFramebufferSize(g_window, &fb_w, &fb_h);
   mousePosScale.x = (float)fb_w / w;                  // Some screens e.g. Retina display have framebuffer size != from window size, and mouse inputs are given in window/screen coordinates.
   mousePosScale.y = (float)fb_h / h;
 
@@ -263,11 +276,11 @@ void UpdateImGui()
   // Setup inputs
   // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
   double mouse_x, mouse_y;
-  glfwGetCursorPos(window, &mouse_x, &mouse_y);
+  glfwGetCursorPos(g_window, &mouse_x, &mouse_y);
 
   io.MousePos = ImVec2((float)mouse_x * mousePosScale.x, (float)mouse_y * mousePosScale.y);      // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
-  io.MouseDown[0] = mousePressed[0] || glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != 0;  // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
-  io.MouseDown[1] = mousePressed[1] || glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != 0;
+  io.MouseDown[0] = mousePressed[0] || glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) != 0;  // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+  io.MouseDown[1] = mousePressed[1] || glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_RIGHT) != 0;
 
   // Start the frame
   ImGui::NewFrame();
@@ -386,7 +399,11 @@ bool CityGen::Init()
 
   //_plexus = FromProtocol(plexusSettings);
 
+#if _WIN32
+  _terrain.data = stbi_load("/projects/citygen/noise.tga", &_terrain.w, &_terrain.h, &_terrain.depth, 0);
+#else
   _terrain.data = stbi_load("/Users/dooz/projects/citygen/noise.tga", &_terrain.w, &_terrain.h, &_terrain.depth, 0);
+#endif
   _terrain.CreateMesh();
 
   InitGL();
@@ -415,18 +432,16 @@ void CityGen::Render()
   glClearColor(0.8f, 0.6f, 0.6f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
+  // calc proj and view matrix
   glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(60.0f, 1.333f, 1.f, 1000.0f);
+  g_proj = glm::perspective(60.0f, 1.333f, 1.f, 1000.0f);
+  glLoadMatrixf(glm::value_ptr(g_proj));
 
   glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-//  gluLookAt(0.5f, 300, 200.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-
-  glm::mat4 view = glm::lookAt( glm::vec3(0.0f, 300.0f, 200.0f), glm::vec3(0., 0., 0.), glm::vec3(0., 1., 0.) );
-  glm::mat4 rot = CITYGEN._arcball->createViewRotationMatrix();
-
-  glLoadMatrixf(glm::value_ptr(view * rot));
+  mat4 dir = glm::lookAt( glm::vec3(0.0f, 300.0f, 200.0f), glm::vec3(0., 0., 0.), glm::vec3(0., 1., 0.) );
+  mat4 rot = CITYGEN._arcball->createViewRotationMatrix();
+  g_view = dir * rot;
+  glLoadMatrixf(glm::value_ptr(g_view));
 
   glEnable(GL_LINE_SMOOTH);
   glLineWidth(1.2f);
@@ -453,13 +468,13 @@ void CityGen::Render()
   ImGui::End();
 
   ImGui::Render();
-  glfwSwapBuffers(window);
+  glfwSwapBuffers(g_window);
 }
 
 //----------------------------------------------------------------------------------
 bool CityGen::Run()
 {
-  while (!glfwWindowShouldClose(window))
+  while (!glfwWindowShouldClose(g_window))
   {
     Update();
     Render();

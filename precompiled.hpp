@@ -16,6 +16,7 @@
 #include <memory>
 #include <ostream>
 #include <queue>
+#include <map>
 #include <set>
 #include <sstream>
 #include <string>
