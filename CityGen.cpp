@@ -127,6 +127,15 @@ static void glfw_mouse_button_callback(GLFWwindow* window, int button, int actio
 
   if (action == GLFW_PRESS && button >= 0 && button < 2)
     mousePressed[button] = true;
+
+  if (action == GLFW_RELEASE && button == 0)
+  {
+    vector<vec3>& v = CITYGEN._points;
+    if (v.size() == 2)
+      v.clear();
+
+    v.push_back(CITYGEN._terrain.intersection);
+  }
 }
 
 static void glfw_cursor_callback(GLFWwindow *window, double x, double y)
@@ -181,7 +190,6 @@ void InitGL()
   glfwSetScrollCallback(g_window, glfw_scroll_callback);
   glfwSetCharCallback(g_window, glfw_char_callback);
   glfwSetCursorPosCallback(g_window, glfw_cursor_callback);
-
 
   glewInit();
 
@@ -354,19 +362,26 @@ void Terrain::CreateMesh()
     {
       // v1-v2
       // v0-v3
-      u32 v0 = (i+0)*w+(j+0);
-      u32 v1 = (i+1)*w+(j+0);
-      u32 v2 = (i+1)*w+(j+1);
-      u32 v3 = (i+0)*w+(j+1);
+      u32 i0 = (i+0)*w+(j+0);
+      u32 i1 = (i+1)*w+(j+0);
+      u32 i2 = (i+1)*w+(j+1);
+      u32 i3 = (i+0)*w+(j+1);
 
-      triPtr->v0 = verts[v0];
-      triPtr->v1 = verts[v1];
-      triPtr->v2 = verts[v2];
+      const vec3& v0 = verts[i0];
+      const vec3& v1 = verts[i1];
+      const vec3& v2 = verts[i2];
+      const vec3& v3 = verts[i3];
+
+      triPtr->v0 = v0;
+      triPtr->v1 = v1;
+      triPtr->v2 = v2;
+      triPtr->n = glm::normalize(glm::cross(v1-v0, v2-v0));
       triPtr++;
 
-      triPtr->v0 = verts[v0];
-      triPtr->v1 = verts[v2];
-      triPtr->v2 = verts[v3];
+      triPtr->v0 = v0;
+      triPtr->v1 = v2;
+      triPtr->v2 = v3;
+      triPtr->n = glm::normalize(glm::cross(v2-v0, v3-v0));
       triPtr++;
     }
   }
@@ -376,13 +391,29 @@ void Terrain::CreateMesh()
 void Terrain::CalcIntersection(const vec3& org, const vec3& dir)
 {
   intersected.clear();
+  Tri closestTri;
+  vec3 closestPos;
+  float closest = FLT_MAX;
   for (const Tri& tri : tris)
   {
+    // pos = [t, u, v]
     vec3 pos;
-    if (glm::intersectLineTriangle(org, dir, tri.v0, tri.v1, tri.v2, pos))
+    if (glm::intersectLineTriangle(org, dir, tri.v0, tri.v1, tri.v2, pos) && pos.x < closest)
     {
-      intersected.push_back(tri);
+      closest = pos.x;
+      closestTri = tri;
+      closestPos = pos;
     }
+  }
+
+  if (closest != FLT_MAX)
+  {
+    intersected.push_back(closestTri.v0);
+    intersected.push_back(closestTri.v1);
+    intersected.push_back(closestTri.v2);
+    float u = closestPos.y;
+    float v = closestPos.z;
+    intersection = (1 - u - v) * closestTri.v0 + u * closestTri.v1 + v * closestTri.v2;
   }
 }
 
@@ -413,6 +444,7 @@ CityGen& CityGen::Instance()
 //----------------------------------------------------------------------------------
 CityGen::CityGen()
   : _arcball(nullptr)
+  , _drawNormals(false)
 {
   _stateFlags.Set(StateFlagsF::Paused);
 }
@@ -468,6 +500,28 @@ void CityGen::Update()
 }
 
 //----------------------------------------------------------------------------------
+void CityGen::GeneratePrimary()
+{
+  if (_points.size() < 2)
+    return;
+
+  vec3 cur = _points[0];
+  vec3 end = _points[1];
+
+  _primary.push_back(cur);
+
+  while (true)
+  {
+    if (glm::distance(cur, end) < _sampleSize)
+      break;
+
+    // move towards the goal, and create potential points in an arc of 2 * _deviation degrees
+    // the arc is in the plane of the current triangle
+    vec3 dir = glm::normalize(end - cur);
+  }
+}
+
+//----------------------------------------------------------------------------------
 void CityGen::Render()
 {
   ImGuiIO& io = ImGui::GetIO();
@@ -477,6 +531,29 @@ void CityGen::Render()
   glClearColor(0.8f, 0.6f, 0.6f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
+  static bool open = true;
+  ImGui::Begin("Properties", &open, ImVec2(200, 100));
+
+  if (ImGui::InputFloat("scale", &_terrain.scale, 1)
+      || ImGui::InputFloat("h-scale", &_terrain.heightScale, 0.1f))
+  {
+    _terrain.scale = max(1.f, min(100.f, _terrain.scale));
+    _terrain.heightScale = max(0.1f, min(5.f, _terrain.heightScale));
+    _terrain.CreateMesh();
+  }
+
+  if (ImGui::InputInt("# segments", &_numSegments, 1, 5)
+      || ImGui::InputFloat("sample size", &_sampleSize, 1, 5)
+      || ImGui::InputFloat("deviation", &_deviation, DEG_TO_RAD(5)))
+  {
+    GeneratePrimary();
+  }
+
+  ImGui::Checkbox("normals", &_drawNormals);
+
+  ImGui::End();
+
+
   // calc proj and view matrix
   glMatrixMode(GL_PROJECTION);
   g_proj = glm::perspective(60.0f, 1.333f, 1.f, 1000.0f);
@@ -485,8 +562,8 @@ void CityGen::Render()
   glMatrixMode(GL_MODELVIEW);
   g_cameraPos = glm::vec3(0.0f, 300.0f, 200.0f);
   mat4 dir = glm::lookAt(g_cameraPos, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0) );
-  mat4 rot = CITYGEN._arcball->createViewRotationMatrix();
-  g_view = rot * dir;
+  _rot = CITYGEN._arcball->createViewRotationMatrix();
+  g_view = _rot * dir;
   glLoadMatrixf(glm::value_ptr(g_view));
 
   glEnable(GL_LINE_SMOOTH);
@@ -501,28 +578,40 @@ void CityGen::Render()
   glVertexPointer(3, GL_FLOAT, 0, _terrain.verts.data());
   glDrawElements(GL_TRIANGLES, _terrain.indices.size(), GL_UNSIGNED_INT, _terrain.indices.data());
 
+  if (_drawNormals)
+  {
+    vector<vec3> normals(_terrain.tris.size()*2);
+    for (size_t i = 0; i < _terrain.tris.size(); ++i)
+    {
+      const Tri& tri = _terrain.tris[i];
+      vec3 p = (tri.v0 + tri.v1 + tri.v2) / 3.f;
+      normals[i*2+0] = p;
+      normals[i*2+1] = p + 10.f * tri.n;
+    }
+
+    glColor4ub(0x0, 0xfd, 0x0, 255);
+    glVertexPointer(3, GL_FLOAT, 0, normals.data());
+    glDrawArrays(GL_LINES, 0, normals.size());
+  }
+
   // draw intersected tris
   if (!_terrain.intersected.empty())
   {
     glColor4ub(0xfd, 0xf6, 0x0, 255);
     glVertexPointer(3, GL_FLOAT, 0, _terrain.intersected.data());
-    glDrawArrays(GL_TRIANGLES, 0, _terrain.intersected.size() * 3);
+    glDrawArrays(GL_TRIANGLES, 0, _terrain.intersected.size());
+  }
+
+  // draw road
+  if (_points.size() == 2)
+  {
+    glColor4ub(0xfd, 0x0, 0x0, 255);
+    glVertexPointer(3, GL_FLOAT, 0, _points.data());
+    glDrawArrays(GL_LINE_STRIP, 0, _points.size());
   }
 
   glDisableClientState(GL_VERTEX_ARRAY);
 
-  static bool open = true;
-  ImGui::Begin("Properties", &open, ImVec2(200, 100));
-
-  if (ImGui::InputFloat("scale", &_terrain.scale, 1)
-   || ImGui::InputFloat("h-scale", &_terrain.heightScale, 0.1f))
-  {
-    _terrain.scale = max(1.f, min(100.f, _terrain.scale));
-    _terrain.heightScale = max(0.1f, min(5.f, _terrain.heightScale));
-    _terrain.CreateMesh();
-  }
-
-  ImGui::End();
 
   ImGui::Render();
   glfwSwapBuffers(g_window);

@@ -3,6 +3,9 @@
 #include "glm/glm.hpp"
 #include "glm/core/type_vec3.hpp"
 
+#define DEG_TO_RAD(x) ((x)/180.f*3.1415926f)
+#define RAD_TO_DEG(x) ((x)/3.1415926f*180)
+
 namespace citygen
 {
   using std::vector;
@@ -31,6 +34,7 @@ namespace citygen
   struct Tri
   {
     vec3 v0, v1, v2;
+    vec3 n;
   };
 
   struct Terrain
@@ -41,7 +45,8 @@ namespace citygen
     vector<vec3> verts;
     vector<Tri> tris;
     vector<u32> indices;
-    vector<Tri> intersected;
+    vector<vec3> intersected;
+    vec3 intersection;
     u8* data;
     int w, h;
     int depth;
@@ -75,6 +80,8 @@ namespace citygen
     void Update();
     void Render();
 
+    void GeneratePrimary();
+
     static CityGen* _instance;
     string _appRoot;
     //ptime _lastUpdate;
@@ -85,6 +92,17 @@ namespace citygen
     Terrain _terrain;
     FileWatcher _fileWatcher;
     Arcball* _arcball;
+
+    vector<vec3> _points;
+    vector<vec3> _primary;
+
+    bool _drawNormals;
+
+    int _numSegments = 10;
+    float _sampleSize = 10;
+    float _deviation = DEG_TO_RAD(5);
+
+    glm::mat4x4 _rot;
   };
 
 #define CITYGEN CityGen::Instance()
