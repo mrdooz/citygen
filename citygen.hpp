@@ -1,25 +1,5 @@
 #pragma once
 
-#include "glm/glm.hpp"
-#include "glm/core/type_vec3.hpp"
-
-#define DEG_TO_RAD(x) ((x)/180.f*3.1415926f)
-#define RAD_TO_DEG(x) ((x)/3.1415926f*180)
-
-namespace citygen
-{
-  using std::vector;
-  using std::map;
-  using std::string;
-
-  using glm::vec2;
-  using glm::vec3;
-  using glm::vec4;
-  using glm::mat4;
-  using glm::dot;
-}
-
-#pragma once
 
 namespace bristol
 {
@@ -74,6 +54,8 @@ namespace citygen
     bool Run();
     bool Close();
 
+    void AddPoint(const vec3& pt);
+
     CityGen();
     ~CityGen();
 
@@ -81,6 +63,7 @@ namespace citygen
     void Render();
 
     void GeneratePrimary();
+    void RenderUI();
 
     static CityGen* _instance;
     string _appRoot;
@@ -100,7 +83,7 @@ namespace citygen
 
     int _numSegments = 10;
     float _sampleSize = 10;
-    float _deviation = DEG_TO_RAD(5);
+    float _deviation = DEG_TO_RAD(10);
 
     glm::mat4x4 _rot;
   };

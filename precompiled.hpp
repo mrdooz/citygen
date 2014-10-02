@@ -35,6 +35,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 #include "glm/gtc/matrix_inverse.hpp"
+#include "glm/core/type_vec3.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -50,6 +51,8 @@
 #include <bristol/string_utils.hpp>
 #include <bristol/file_watcher.hpp>
 
+#define DEG_TO_RAD(x) ((x)/180.f*3.1415926f)
+#define RAD_TO_DEG(x) ((x)/3.1415926f*180)
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -99,6 +102,15 @@ namespace citygen
 
   using bristol::exch_null;
 
+  using glm::vec2;
+  using glm::vec3;
+  using glm::vec4;
+  using glm::mat4;
+  using glm::dot;
+  using glm::cross;
+  using glm::normalize;
+  using glm::distance;
+  using glm::length;
 }
 
 #include "imgui/stb_image.h"                  // for .png loading

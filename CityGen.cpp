@@ -135,11 +135,7 @@ static void glfw_mouse_button_callback(GLFWwindow* window, int button, int actio
 
   if (action == GLFW_RELEASE && button == 0)
   {
-    vector<vec3>& v = CITYGEN._points;
-    if (v.size() == 2)
-      v.clear();
-
-    v.push_back(CITYGEN._terrain.intersection);
+    CITYGEN.AddPoint(CITYGEN._terrain.intersection);
   }
 }
 
@@ -506,24 +502,83 @@ void CityGen::Update()
 }
 
 //----------------------------------------------------------------------------------
+void CityGen::AddPoint(const vec3& pt)
+{
+  ImGuiIO& io = ImGui::GetIO();
+  if (io.KeyShift)
+  {
+    _points.push_back(pt);
+    GeneratePrimary();
+  }
+}
+
+//----------------------------------------------------------------------------------
 void CityGen::GeneratePrimary()
 {
   if (_points.size() < 2)
     return;
 
-  vec3 cur = _points[0];
-  vec3 end = _points[1];
+  _primary.clear();
 
-  _primary.push_back(cur);
+  vector<vec2> targets(_numSegments);
 
-  while (true)
+  for (int curIdx = 0; curIdx < _points.size() - 1; ++curIdx)
   {
-    if (glm::distance(cur, end) < _sampleSize)
-      break;
+    vec2 cur(_points[curIdx+0].x, _points[curIdx+0].y);
+    vec2 end(_points[curIdx+1].x, _points[curIdx+1].y);
 
-    // move towards the goal, and create potential points in an arc of 2 * _deviation degrees
-    // the arc is in the plane of the current triangle
-    vec3 dir = glm::normalize(end - cur);
+    float z = _points[curIdx+1].z;
+
+    // cos t = dot(a, b)
+    // calculations are done in the 2d-plane
+    // 0 angle is straight up
+
+    vec2 dir = normalize(end - cur);
+    float angle = acos(dot(vec2(0,1), dir));
+
+    while (true)
+    {
+      _primary.push_back(vec3(cur.x, cur.y, z));
+
+      // check if we're done with the current segment
+      float len = length(end - cur);
+      if (len <= 2 * _sampleSize)
+      {
+        _primary.push_back(vec3(end.x, end.y, z));
+        break;
+      }
+
+      // step along the direction
+      cur += _sampleSize * dir;
+
+      // generate possible targets
+      float a = angle - (_numSegments - 1) / 2.f * _deviation;
+      float s = _deviation / _numSegments;
+      for (int i = 0; i < _numSegments; ++i)
+      {
+        targets[i] = cur + _sampleSize * vec2(sinf(a), cosf(a));
+        a += s;
+      }
+
+      // choose target
+      float closest = FLT_MAX;
+      int idx = -1;
+
+      for (int i = 0; i < _numSegments; ++i)
+      {
+        float tmp = length(end - targets[i]);
+        if (tmp < closest)
+        {
+          closest = tmp;
+          idx = i;
+        }
+      }
+
+      // update angle and direction
+      angle += idx - (_numSegments - 1) / 2.f * _deviation;
+      dir = normalize(targets[idx] - cur);
+    }
+
   }
 }
 
@@ -613,12 +668,12 @@ void CityGen::Render()
     glDrawArrays(GL_TRIANGLES, 0, _terrain.intersected.size());
   }
 
-  // draw road
-  if (_points.size() == 2)
+  // draw primary
+  if (_primary.size() >= 2)
   {
     glColor4ub(0xfd, 0x0, 0x0, 255);
-    glVertexPointer(3, GL_FLOAT, 0, _points.data());
-    glDrawArrays(GL_LINE_STRIP, 0, _points.size());
+    glVertexPointer(3, GL_FLOAT, 0, _primary.data());
+    glDrawArrays(GL_LINE_STRIP, 0, _primary.size());
   }
 
   glDisableClientState(GL_VERTEX_ARRAY);
