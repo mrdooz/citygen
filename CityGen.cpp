@@ -7,9 +7,14 @@ CityGen* CityGen::_instance;
 #pragma warning (disable: 4996)         // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
 #include <Windows.h>
 #include <Imm.h>
+#pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 #pragma comment(lib, "imm32.lib")
+#if _DEBUG
 #pragma comment(lib, "/projects/glfw/src/debug/glfw3.lib")
+#else
+#pragma comment(lib, "/projects/glfw/src/release/glfw3.lib")
+#endif
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -191,7 +196,7 @@ void InitGL()
   glfwSetCharCallback(g_window, glfw_char_callback);
   glfwSetCursorPosCallback(g_window, glfw_cursor_callback);
 
-  glewInit();
+  //glewInit();
 
   int w, h;
   int fb_w, fb_h;
@@ -394,8 +399,9 @@ void Terrain::CalcIntersection(const vec3& org, const vec3& dir)
   Tri closestTri;
   vec3 closestPos;
   float closest = FLT_MAX;
-  for (const Tri& tri : tris)
+  for (size_t i = 0; i < tris.size(); ++i)
   {
+    const Tri& tri = tris[i];
     // pos = [t, u, v]
     vec3 pos;
     if (glm::intersectLineTriangle(org, dir, tri.v0, tri.v1, tri.v2, pos) && pos.x < closest)
@@ -522,6 +528,32 @@ void CityGen::GeneratePrimary()
 }
 
 //----------------------------------------------------------------------------------
+void CityGen::RenderUI()
+{
+  static bool open = true;
+  ImGui::Begin("Properties", &open, ImVec2(200, 100));
+
+  if (ImGui::InputFloat("scale", &_terrain.scale, 1)
+    || ImGui::InputFloat("h-scale", &_terrain.heightScale, 0.1f))
+  {
+    _terrain.scale = max(1.f, min(100.f, _terrain.scale));
+    _terrain.heightScale = max(0.1f, min(5.f, _terrain.heightScale));
+    _terrain.CreateMesh();
+  }
+
+  if (ImGui::InputInt("# segments", &_numSegments, 1, 5)
+    || ImGui::InputFloat("sample size", &_sampleSize, 1, 5)
+    || ImGui::InputFloat("deviation", &_deviation, DEG_TO_RAD(5)))
+  {
+    GeneratePrimary();
+  }
+
+  ImGui::Checkbox("normals", &_drawNormals);
+
+  ImGui::End();
+}
+
+//----------------------------------------------------------------------------------
 void CityGen::Render()
 {
   ImGuiIO& io = ImGui::GetIO();
@@ -531,28 +563,7 @@ void CityGen::Render()
   glClearColor(0.8f, 0.6f, 0.6f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  static bool open = true;
-  ImGui::Begin("Properties", &open, ImVec2(200, 100));
-
-  if (ImGui::InputFloat("scale", &_terrain.scale, 1)
-      || ImGui::InputFloat("h-scale", &_terrain.heightScale, 0.1f))
-  {
-    _terrain.scale = max(1.f, min(100.f, _terrain.scale));
-    _terrain.heightScale = max(0.1f, min(5.f, _terrain.heightScale));
-    _terrain.CreateMesh();
-  }
-
-  if (ImGui::InputInt("# segments", &_numSegments, 1, 5)
-      || ImGui::InputFloat("sample size", &_sampleSize, 1, 5)
-      || ImGui::InputFloat("deviation", &_deviation, DEG_TO_RAD(5)))
-  {
-    GeneratePrimary();
-  }
-
-  ImGui::Checkbox("normals", &_drawNormals);
-
-  ImGui::End();
-
+  RenderUI();
 
   // calc proj and view matrix
   glMatrixMode(GL_PROJECTION);

@@ -33,7 +33,6 @@ if (APPLE)
   # specifically link against a protobuf and boost build with libc++
   target_link_libraries(${PROJECT_NAME}
     "/Users/dooz/Library/Caches/appCode30/DerivedData/bristol-e7802bc5/Build/Products/Debug/libbristol_main.a"
-    "/Users/dooz//Library/Caches/appCode30/DerivedData/bristol-e7802bc5/Build/Products/Debug/libbristol_sfml.a"
     "/usr/local/Cellar/glew/1.10.0/lib/libGLEW.a"
     "/usr/local/lib/libglfw3.a"
     ${OPEN_GL}
@@ -80,11 +79,7 @@ else()
     endforeach()
    
     target_link_libraries(${PROJECT_NAME}
-      debug ${SFML_GRAPHICS_LIBRARY_DEBUG} optimized ${SFML_GRAPHICS_LIBRARY_RELEASE}
-      debug ${SFML_SYSTEM_LIBRARY_DEBUG} optimized ${SFML_SYSTEM_LIBRARY_RELEASE}
-      debug ${SFML_WINDOW_LIBRARY_DEBUG} optimized ${SFML_WINDOW_LIBRARY_RELEASE}
       debug ${BRISTOL_MAIN_LIBRARY_DEBUG} optimized ${BRISTOL_MAIN_LIBRARY_RELEASE}
-      debug ${BRISTOL_SFML_LIBRARY_DEBUG} optimized ${BRISTOL_SFML_LIBRARY_RELEASE}
       )
   endif(MSVC)
 endif()
