@@ -195,7 +195,6 @@ void InitGL()
   //glewInit();
 
   int w, h;
-  int fb_w, fb_h;
   glfwGetWindowSize(g_window, &w, &h);
   CITYGEN._arcball = new Arcball(w, h);
 }
@@ -315,13 +314,17 @@ void Terrain::CreateMesh()
   verts.resize(w*h);
   vec3* vertPtr = verts.data();
   u32* indPtr = indices.data();
-
-  float z = -(h-1)/2.f * scale;
   u8* ptr = data;
 
+  minValues.x = -(w-1)/2.f * scale;
+  minValues.z = -(h-1)/2.f * scale;
+  maxValues.x = +(w-1)/2.f * scale;
+  maxValues.z = +(h-1)/2.f * scale;
+
+  float z = minValues.z;
   for (int i = 0; i < h; ++i)
   {
-    float x = -(w-1)/2.f * scale;
+    float x = minValues.z;
     for (int j = 0; j < w; ++j)
     {
       float y = (ptr[0] + ptr[1] + ptr[2]) / 3.f * heightScale;
@@ -420,6 +423,29 @@ void Terrain::CalcIntersection(const vec3& org, const vec3& dir)
 }
 
 //----------------------------------------------------------------------------------
+Tri* Terrain::FindTri(const vec3& v)
+{
+  // Note, we project to x/z plane, so just ignore the y-component
+  if (v.x < minValues.x || v.x > maxValues.x || v.z < minValues.z || v.z > maxValues.z)
+    return nullptr;
+
+  int x = (v.x - minValues.x) / (maxValues.x - minValues.x);
+  int z = (v.z - minValues.z) / (maxValues.z - minValues.z);
+
+  // TOOD, determine if we're in the upper or lower triangle
+  return &tris[2 * (z * w + x)];
+}
+
+//----------------------------------------------------------------------------------
+CityGen::CityGen()
+    : _arcball(nullptr)
+    , _drawDebugLines(true)
+    , _drawNormals(false)
+{
+  _stateFlags.Set(StateFlagsF::Paused);
+}
+
+//----------------------------------------------------------------------------------
 void CityGen::Create()
 {
   if (!_instance)
@@ -443,13 +469,6 @@ CityGen& CityGen::Instance()
   return *_instance;
 }
 
-//----------------------------------------------------------------------------------
-CityGen::CityGen()
-  : _arcball(nullptr)
-  , _drawNormals(false)
-{
-  _stateFlags.Set(StateFlagsF::Paused);
-}
 
 //----------------------------------------------------------------------------------
 CityGen::~CityGen()
@@ -519,44 +538,41 @@ void CityGen::GeneratePrimary()
     return;
 
   _primary.clear();
+  _debugLines.clear();
 
-  vector<vec2> targets(_numSegments);
+  static vector<vec3> targets(_numSegments);
+  static vector<float> targetAngles(_numSegments);
 
   for (int curIdx = 0; curIdx < _points.size() - 1; ++curIdx)
   {
-    vec2 cur(_points[curIdx+0].x, _points[curIdx+0].y);
-    vec2 end(_points[curIdx+1].x, _points[curIdx+1].y);
+    vec3 cur(_points[curIdx+0].x, 0, _points[curIdx+0].z);
+    vec3 end(_points[curIdx+1].x, 0, _points[curIdx+1].z);
 
-    float z = _points[curIdx+1].z;
+    Tri* tri0 = _terrain.FindTri(cur);
+    Tri* tri1 = _terrain.FindTri(end);
+    cur.y = tri0->v0.y;
+    end.y = tri1->v0.y;
 
     // cos t = dot(a, b)
     // calculations are done in the 2d-plane
     // 0 angle is straight up
 
-    vec2 dir = normalize(end - cur);
-    float angle = acos(dot(vec2(0,1), dir));
+    vec3 dir = normalize(end - cur);
+    float angle = acos(dot(vec3(0,0,1), dir));
 
     while (true)
     {
-      _primary.push_back(vec3(cur.x, cur.y, z));
-
-      // check if we're done with the current segment
-      float len = length(end - cur);
-      if (len <= 2 * _sampleSize)
-      {
-        _primary.push_back(vec3(end.x, end.y, z));
-        break;
-      }
-
-      // step along the direction
-      cur += _sampleSize * dir;
+      _primary.push_back(cur);
 
       // generate possible targets
       float a = angle - (_numSegments - 1) / 2.f * _deviation;
       float s = _deviation / _numSegments;
       for (int i = 0; i < _numSegments; ++i)
       {
-        targets[i] = cur + _sampleSize * vec2(sinf(a), cosf(a));
+        vec3 tmp = cur + _sampleSize * vec3(sinf(a), 0, cosf(a));
+        targets[i] = tmp;
+        _debugLines.push_back(cur);
+        _debugLines.push_back(tmp);
         a += s;
       }
 
@@ -575,8 +591,19 @@ void CityGen::GeneratePrimary()
       }
 
       // update angle and direction
-      angle += idx - (_numSegments - 1) / 2.f * _deviation;
+      angle += (idx - (_numSegments - 1) / 2.f) * _deviation;
       dir = normalize(targets[idx] - cur);
+
+      // step along the direction
+      cur += _sampleSize * dir;
+
+      // check if we're done with the current segment
+      float len = length(end - cur);
+      if (len <= 2 * _sampleSize)
+      {
+        _primary.push_back(end);
+        break;
+      }
     }
 
   }
@@ -604,6 +631,7 @@ void CityGen::RenderUI()
   }
 
   ImGui::Checkbox("normals", &_drawNormals);
+  ImGui::Checkbox("debuglines", &_drawDebugLines);
 
   ImGui::End();
 }
@@ -658,6 +686,13 @@ void CityGen::Render()
     glColor4ub(0x0, 0xfd, 0x0, 255);
     glVertexPointer(3, GL_FLOAT, 0, normals.data());
     glDrawArrays(GL_LINES, 0, normals.size());
+  }
+
+  if (_drawDebugLines && !_debugLines.empty())
+  {
+    glColor4ub(0x0, 0xfd, 0x0, 255);
+    glVertexPointer(3, GL_FLOAT, 0, _debugLines.data());
+    glDrawArrays(GL_LINES, 0, _debugLines.size());
   }
 
   // draw intersected tris

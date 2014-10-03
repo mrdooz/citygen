@@ -22,10 +22,12 @@ namespace citygen
     Terrain();
     void CreateMesh();
     void CalcIntersection(const vec3& org, const vec3& dir);
+    Tri* FindTri(const vec3& v);
     vector<vec3> verts;
     vector<Tri> tris;
     vector<u32> indices;
     vector<vec3> intersected;
+    vec3 minValues, maxValues;
     vec3 intersection;
     u8* data;
     int w, h;
@@ -78,6 +80,9 @@ namespace citygen
 
     vector<vec3> _points;
     vector<vec3> _primary;
+
+    bool _drawDebugLines;
+    vector<vec3> _debugLines;
 
     bool _drawNormals;
 
