@@ -302,7 +302,7 @@ void UpdateImGui()
 Terrain::Terrain()
 {
   memset(this, 0, sizeof(Terrain));
-  scale = 10;
+  scale = 20;
   heightScale = 1;
 }
 
@@ -545,18 +545,12 @@ void CityGen::GeneratePrimary()
 
   for (int curIdx = 0; curIdx < _points.size() - 1; ++curIdx)
   {
-    vec3 cur(_points[curIdx+0].x, 0, _points[curIdx+0].z);
-    vec3 end(_points[curIdx+1].x, 0, _points[curIdx+1].z);
-
-    Tri* tri0 = _terrain.FindTri(cur);
-    Tri* tri1 = _terrain.FindTri(end);
-    cur.y = tri0->v0.y;
-    end.y = tri1->v0.y;
+    vec3 cur(_points[curIdx+0]);
+    vec3 end(_points[curIdx+1]);
 
     // cos t = dot(a, b)
     // calculations are done in the 2d-plane
     // 0 angle is straight up
-
     vec3 dir = normalize(end - cur);
     float angle = acos(dot(vec3(0,0,1), dir));
 
@@ -565,7 +559,7 @@ void CityGen::GeneratePrimary()
       _primary.push_back(cur);
 
       // generate possible targets
-      float a = angle - (_numSegments - 1) / 2.f * _deviation;
+      float a = angle - _deviation / ((_numSegments - 1) / 2.f);
       float s = _deviation / _numSegments;
       for (int i = 0; i < _numSegments; ++i)
       {
@@ -573,6 +567,7 @@ void CityGen::GeneratePrimary()
         targets[i] = tmp;
         _debugLines.push_back(cur);
         _debugLines.push_back(tmp);
+        targetAngles[i] = a;
         a += s;
       }
 
@@ -591,7 +586,7 @@ void CityGen::GeneratePrimary()
       }
 
       // update angle and direction
-      angle += (idx - (_numSegments - 1) / 2.f) * _deviation;
+      angle = targetAngles[idx];
       dir = normalize(targets[idx] - cur);
 
       // step along the direction
@@ -599,7 +594,7 @@ void CityGen::GeneratePrimary()
 
       // check if we're done with the current segment
       float len = length(end - cur);
-      if (len <= 2 * _sampleSize)
+      if (len <= _terrain.scale)
       {
         _primary.push_back(end);
         break;

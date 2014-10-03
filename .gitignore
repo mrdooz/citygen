@@ -1,3 +1,5 @@
+*.vcxproj
+*.sln
 tags
 trace
 editor/cmake_install.cmake

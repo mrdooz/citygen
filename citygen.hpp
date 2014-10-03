@@ -87,8 +87,8 @@ namespace citygen
     bool _drawNormals;
 
     int _numSegments = 10;
-    float _sampleSize = 10;
-    float _deviation = DEG_TO_RAD(10);
+    float _sampleSize = 5;
+    float _deviation = DEG_TO_RAD(45);
 
     glm::mat4x4 _rot;
   };
