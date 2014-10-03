@@ -548,12 +548,12 @@ void CityGen::GeneratePrimary()
     vec3 cur(_points[curIdx+0]);
     vec3 end(_points[curIdx+1]);
 
-    // cos t = dot(a, b)
     // calculations are done in the 2d-plane
-    // 0 angle is straight up
+    // 0 degrees -> (1,0)
     vec3 dir = normalize(end - cur);
-    float angle = acos(dot(vec3(0,0,1), dir));
+    float angle = atan2(dir.y, dir.x);
 
+    float prevLen = FLT_MAX;
     while (true)
     {
       _primary.push_back(cur);
@@ -563,7 +563,7 @@ void CityGen::GeneratePrimary()
       float s = _deviation / _numSegments;
       for (int i = 0; i < _numSegments; ++i)
       {
-        vec3 tmp = cur + _sampleSize * vec3(sinf(a), 0, cosf(a));
+        vec3 tmp = cur + _sampleSize * vec3(cosf(a), 0, sinf(a));
         targets[i] = tmp;
         _debugLines.push_back(cur);
         _debugLines.push_back(tmp);
@@ -594,11 +594,12 @@ void CityGen::GeneratePrimary()
 
       // check if we're done with the current segment
       float len = length(end - cur);
-      if (len <= _terrain.scale)
+      if (len <= _terrain.scale || len >= prevLen)
       {
         _primary.push_back(end);
         break;
       }
+      prevLen = len;
     }
 
   }
