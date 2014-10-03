@@ -540,9 +540,6 @@ void CityGen::GeneratePrimary()
   _primary.clear();
   _debugLines.clear();
 
-  static vector<vec3> targets(_numSegments);
-  static vector<float> targetAngles(_numSegments);
-
   for (int curIdx = 0; curIdx < _points.size() - 1; ++curIdx)
   {
     vec3 cur(_points[curIdx+0]);
@@ -561,33 +558,27 @@ void CityGen::GeneratePrimary()
       // generate possible targets
       float a = angle - _deviation / ((_numSegments - 1) / 2.f);
       float s = _deviation / _numSegments;
-      for (int i = 0; i < _numSegments; ++i)
-      {
-        vec3 tmp = cur + _sampleSize * vec3(cosf(a), 0, sinf(a));
-        targets[i] = tmp;
-        _debugLines.push_back(cur);
-        _debugLines.push_back(tmp);
-        targetAngles[i] = a;
-        a += s;
-      }
 
-      // choose target
       float closest = FLT_MAX;
-      int idx = -1;
+      vec3 nextStep;
 
       for (int i = 0; i < _numSegments; ++i)
       {
-        float tmp = length(end - targets[i]);
+        vec3 pt = cur + _sampleSize * vec3(cosf(a), 0, sinf(a));
+        float tmp = length(end - pt);
         if (tmp < closest)
         {
           closest = tmp;
-          idx = i;
+          nextStep = pt;
+          angle = a;
         }
+
+        _debugLines.push_back(cur);
+        _debugLines.push_back(pt);
+        a += s;
       }
 
-      // update angle and direction
-      angle = targetAngles[idx];
-      dir = normalize(targets[idx] - cur);
+      dir = normalize(nextStep - cur);
 
       // step along the direction
       cur += _sampleSize * dir;
