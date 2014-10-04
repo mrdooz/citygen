@@ -101,6 +101,7 @@ namespace citygen
   using bristol::FileWatcher;
 
   using bristol::exch_null;
+  using bristol::lerp;
 
   using glm::vec2;
   using glm::vec3;

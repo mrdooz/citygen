@@ -541,18 +541,20 @@ struct Stepper
       , numSegments(numSegments)
   {
     vec3 dir = normalize(end - cur);
-    angle = atan2(dir.y, dir.x);
+    angle = atan2(dir.z, dir.x);
   }
 
   vec3 Step(const vec3& goal)
   {
     // generate possible targets
     float ns = numSegments;
-    float a = angle - deviation / ((ns - 1) / 2.f);
-    float s = deviation / ns;
+    float a = angle - deviation / (ns-1);
+    float s = 2 * deviation / ns;
 
     float closest = FLT_MAX;
     vec3 nextStep;
+
+    //float dy = goal.y - cur.y;
 
     for (int i = 0; i < numSegments; ++i)
     {
@@ -567,6 +569,9 @@ struct Stepper
 
       a += s;
     }
+
+    // lerp the y coord between the current and the goal based on the distance
+    nextStep.y = lerp(nextStep.y, goal.y, min(1.f, stepSize / closest));
 
     cur = nextStep;
     return cur;
@@ -600,8 +605,8 @@ void CityGen::GeneratePrimary()
     vec3 end(_points[curIdx+1]);
 
     // make 2 steppers, one for each direction
-    Stepper forwardStepper(cur, end, _sampleSize, _deviation, _numSegments);
-    Stepper backwardStepper(end, cur, _sampleSize, _deviation, _numSegments);
+    Stepper forwardStepper(cur, end, _stepSize, _deviation, _numSegments);
+    Stepper backwardStepper(end, cur, _stepSize, _deviation, _numSegments);
 
     forward.push_back(cur);
     backward.push_back(end);
@@ -650,8 +655,8 @@ void CityGen::RenderUI()
   }
 
   if (ImGui::InputInt("# segments", &_numSegments, 1, 5)
-    || ImGui::InputFloat("sample size", &_sampleSize, 1, 5)
-    || ImGui::InputFloat("deviation", &_deviation, DEG_TO_RAD(5)))
+    || ImGui::InputFloat("sample size", &_stepSize, 0.1f, 5)
+    || ImGui::InputFloat("deviation", &_deviation, DEG_TO_RAD(1)))
   {
     GeneratePrimary();
   }
