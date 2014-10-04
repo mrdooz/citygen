@@ -22,18 +22,17 @@ namespace citygen
     Terrain();
     void CreateMesh();
     void CalcIntersection(const vec3& org, const vec3& dir);
-    Tri* FindTri(const vec3& v);
-    vector<vec3> verts;
-    vector<Tri> tris;
-    vector<u32> indices;
-    vector<vec3> intersected;
-    vec3 minValues, maxValues;
-    vec3 intersection;
-    u8* data;
-    int w, h;
-    int depth;
-    float scale;
-    float heightScale;
+    Tri* FindTri(const vec3& v, vec3* out);
+    vector<vec3> _verts;
+    vector<Tri> _tris;
+    vector<u32> _indices;
+    vector<vec3> _intersected;
+    vec3 _minValues, _maxValues;
+    vec3 _intersection;
+    u8* _data;
+    int _w, _h, _depth;
+    float _scale;
+    float _heightScale;
   };
 
   class CityGen

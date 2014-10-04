@@ -135,7 +135,7 @@ static void glfw_mouse_button_callback(GLFWwindow* window, int button, int actio
 
   if (action == GLFW_RELEASE && button == 0)
   {
-    CITYGEN.AddPoint(CITYGEN._terrain.intersection);
+    CITYGEN.AddPoint(CITYGEN._terrain._intersection);
   }
 }
 
@@ -302,29 +302,35 @@ void UpdateImGui()
 Terrain::Terrain()
 {
   memset(this, 0, sizeof(Terrain));
-  scale = 20;
-  heightScale = 1;
+  _scale = 20;
+  _heightScale = 1;
 }
 
 //----------------------------------------------------------------------------------
 void Terrain::CreateMesh()
 {
-  indices.resize((w-1) * (h-1) * 2 * 3);
-  tris.resize((w-1) * (h-1) * 2);
-  verts.resize(w*h);
-  vec3* vertPtr = verts.data();
-  u32* indPtr = indices.data();
-  u8* ptr = data;
+  int w = _w;
+  int h = _h;
+  float scale = _scale;
+  float heightScale = _heightScale;
 
-  minValues.x = -(w-1)/2.f * scale;
-  minValues.z = -(h-1)/2.f * scale;
-  maxValues.x = +(w-1)/2.f * scale;
-  maxValues.z = +(h-1)/2.f * scale;
+  _indices.resize((w-1) * (h-1) * 2 * 3);
+  _tris.resize((w-1) * (h-1) * 2);
+  _verts.resize(w*h);
+  vec3* vertPtr = _verts.data();
+  u32* indPtr = _indices.data();
+  u8* ptr = _data;
 
-  float z = minValues.z;
+  _minValues.x = -(w-1)/2.f * scale;
+  _minValues.z = -(h-1)/2.f * scale;
+  _maxValues.x = +(w-1)/2.f * scale;
+  _maxValues.z = +(h-1)/2.f * scale;
+
+  // remeber, because negative z goes into the screen, the first triangle is the furtherst left corner
+  float z = _minValues.z;
   for (int i = 0; i < h; ++i)
   {
-    float x = minValues.z;
+    float x = _minValues.z;
     for (int j = 0; j < w; ++j)
     {
       float y = (ptr[0] + ptr[1] + ptr[2]) / 3.f * heightScale;
@@ -333,10 +339,11 @@ void Terrain::CreateMesh()
 
       if (i < h-1 && j < w-1)
       {
-        // v1-v2
-        // v0-v3
-        u32 v0 = (i+0)*w+(j+0);
-        u32 v1 = (i+1)*w+(j+0);
+        // note where the +1 offsets in y are due to the z-order
+        // v1-v3
+        // v0-v2
+        u32 v0 = (i+1)*w+(j+0);
+        u32 v1 = (i+0)*w+(j+0);
         u32 v2 = (i+1)*w+(j+1);
         u32 v3 = (i+0)*w+(j+1);
 
@@ -344,8 +351,8 @@ void Terrain::CreateMesh()
         indPtr[1] = v1;
         indPtr[2] = v2;
 
-        indPtr[3] = v0;
-        indPtr[4] = v2;
+        indPtr[3] = v2;
+        indPtr[4] = v1;
         indPtr[5] = v3;
 
         indPtr += 6;
@@ -357,24 +364,23 @@ void Terrain::CreateMesh()
     z += scale;
   }
 
-
   // calc tris
-  Tri* triPtr = tris.data();
+  Tri* triPtr = _tris.data();
   for (int i = 0; i < h-1; ++i)
   {
     for (int j = 0; j < w - 1; ++j)
     {
-      // v1-v2
-      // v0-v3
-      u32 i0 = (i+0)*w+(j+0);
-      u32 i1 = (i+1)*w+(j+0);
+      // v1-v3
+      // v0-v2
+      u32 i0 = (i+1)*w+(j+0);
+      u32 i1 = (i+0)*w+(j+0);
       u32 i2 = (i+1)*w+(j+1);
       u32 i3 = (i+0)*w+(j+1);
 
-      const vec3& v0 = verts[i0];
-      const vec3& v1 = verts[i1];
-      const vec3& v2 = verts[i2];
-      const vec3& v3 = verts[i3];
+      const vec3& v0 = _verts[i0];
+      const vec3& v1 = _verts[i1];
+      const vec3& v2 = _verts[i2];
+      const vec3& v3 = _verts[i3];
 
       triPtr->v0 = v0;
       triPtr->v1 = v1;
@@ -382,10 +388,10 @@ void Terrain::CreateMesh()
       triPtr->n = glm::normalize(glm::cross(v1-v0, v2-v0));
       triPtr++;
 
-      triPtr->v0 = v0;
-      triPtr->v1 = v2;
+      triPtr->v0 = v2;
+      triPtr->v1 = v1;
       triPtr->v2 = v3;
-      triPtr->n = glm::normalize(glm::cross(v2-v0, v3-v0));
+      triPtr->n = glm::normalize(glm::cross(v2-v3, v1-v3));
       triPtr++;
     }
   }
@@ -394,13 +400,13 @@ void Terrain::CreateMesh()
 //----------------------------------------------------------------------------------
 void Terrain::CalcIntersection(const vec3& org, const vec3& dir)
 {
-  intersected.clear();
+  _intersected.clear();
   Tri closestTri;
   vec3 closestPos;
   float closest = FLT_MAX;
-  for (size_t i = 0; i < tris.size(); ++i)
+  for (size_t i = 0; i < _tris.size(); ++i)
   {
-    const Tri& tri = tris[i];
+    const Tri& tri = _tris[i];
     // pos = [t, u, v]
     vec3 pos;
     if (glm::intersectLineTriangle(org, dir, tri.v0, tri.v1, tri.v2, pos) && pos.x < closest)
@@ -413,27 +419,55 @@ void Terrain::CalcIntersection(const vec3& org, const vec3& dir)
 
   if (closest != FLT_MAX)
   {
-    intersected.push_back(closestTri.v0);
-    intersected.push_back(closestTri.v1);
-    intersected.push_back(closestTri.v2);
+    _intersected.push_back(closestTri.v0);
+    _intersected.push_back(closestTri.v1);
+    _intersected.push_back(closestTri.v2);
     float u = closestPos.y;
     float v = closestPos.z;
-    intersection = (1 - u - v) * closestTri.v0 + u * closestTri.v1 + v * closestTri.v2;
+    _intersection = (1 - u - v) * closestTri.v0 + u * closestTri.v1 + v * closestTri.v2;
   }
 }
 
 //----------------------------------------------------------------------------------
-Tri* Terrain::FindTri(const vec3& v)
+Tri* Terrain::FindTri(const vec3& pt, vec3* out)
 {
   // Note, we project to x/z plane, so just ignore the y-component
-  if (v.x < minValues.x || v.x > maxValues.x || v.z < minValues.z || v.z > maxValues.z)
+  if (pt.x < _minValues.x || pt.x > _maxValues.x || pt.z < _minValues.z || pt.z > _maxValues.z)
     return nullptr;
 
-  int x = (v.x - minValues.x) / (maxValues.x - minValues.x);
-  int z = (v.z - minValues.z) / (maxValues.z - minValues.z);
+  vec3 ofs = pt - _minValues;
 
-  // TOOD, determine if we're in the upper or lower triangle
-  return &tris[2 * (z * w + x)];
+  // find the quad the point is in
+  int x = (int)(ofs.x / _scale);
+  int z = (int)(ofs.z / _scale);
+
+  // find the barycentric coords
+  //  v1 v3
+  //  v0 v2
+  // P = w*v0 + v*v1 + u*v2
+  float u = (ofs.x - x * _scale) / _scale;
+  float v = 1 - (ofs.z - z * _scale) / _scale;
+  float w = (1 - u - v);
+
+  // if w is within [0, 1] then we are inside the bottom left triangle
+  if ( w >= 0 && w <= 1)
+  {
+//    printf("u, %f, v: %f, w: %f\n", u, v, w);
+    Tri* t = &_tris[2 * (z * (_w-1) + x) + 0];
+    *out = w * t->v0 + v * t->v1 + u * t->v2;
+    return t;
+  }
+  else
+  {
+    // upper triangle.
+    // negative u and v, so top right betcomes w
+    Tri* t = &_tris[2 * (z * (_w-1) + x) + 1];
+    u = 1 - u;
+    v = 1 - v;
+    w = (1 - u - v);
+    *out = w * t->v2 + v * t->v0 + u * t->v1;
+    return t;
+  }
 }
 
 //----------------------------------------------------------------------------------
@@ -498,9 +532,9 @@ bool CityGen::Init()
   //_plexus = FromProtocol(plexusSettings);
 
 #if _WIN32
-  _terrain.data = stbi_load("/projects/citygen/noise.tga", &_terrain.w, &_terrain.h, &_terrain.depth, 0);
+  _terrain._data = stbi_load("/projects/citygen/noise.tga", &_terrain._w, &_terrain._h, &_terrain._depth, 0);
 #else
-  _terrain.data = stbi_load("/Users/dooz/projects/citygen/noise.tga", &_terrain.w, &_terrain.h, &_terrain.depth, 0);
+  _terrain._data = stbi_load("/Users/dooz/projects/citygen/noise.tga", &_terrain._w, &_terrain._h, &_terrain._depth, 0);
 #endif
   _terrain.CreateMesh();
 
@@ -531,10 +565,12 @@ void CityGen::AddPoint(const vec3& pt)
   }
 }
 
+//----------------------------------------------------------------------------------
 struct Stepper
 {
-  Stepper(const vec3& start, const vec3& end, float stepSize, float deviation, int numSegments)
-      : cur(start)
+  Stepper(Terrain* terrain, const vec3& start, const vec3& end, float stepSize, float deviation, int numSegments)
+      : terrain(terrain)
+      , cur(start)
       , end(end)
       , stepSize(stepSize)
       , deviation(deviation)
@@ -547,36 +583,34 @@ struct Stepper
   vec3 Step(const vec3& goal)
   {
     // generate possible targets
-    float ns = numSegments;
+    float ns = (float)numSegments;
     float a = angle - deviation / (ns-1);
     float s = 2 * deviation / ns;
 
     float closest = FLT_MAX;
     vec3 nextStep;
 
-    //float dy = goal.y - cur.y;
-
     for (int i = 0; i < numSegments; ++i)
     {
       vec3 pt = cur + stepSize * vec3(cosf(a), 0, sinf(a));
+
+      Tri* tri = terrain->FindTri(pt, &pt);
       float tmp = length(goal - pt);
+      //tmp = fabs(cur.y - pt2.y);
       if (tmp < closest)
       {
         closest = tmp;
         nextStep = pt;
         angle = a;
       }
-
       a += s;
     }
-
-    // lerp the y coord between the current and the goal based on the distance
-    nextStep.y = lerp(nextStep.y, goal.y, min(1.f, stepSize / closest));
 
     cur = nextStep;
     return cur;
   }
 
+  Terrain* terrain;
   vec3 cur, end;
   float stepSize;
   float deviation;
@@ -605,8 +639,8 @@ void CityGen::GeneratePrimary()
     vec3 end(_points[curIdx+1]);
 
     // make 2 steppers, one for each direction
-    Stepper forwardStepper(cur, end, _stepSize, _deviation, _numSegments);
-    Stepper backwardStepper(end, cur, _stepSize, _deviation, _numSegments);
+    Stepper forwardStepper(&_terrain, cur, end, _stepSize, _deviation, _numSegments);
+    Stepper backwardStepper(&_terrain, end, cur, _stepSize, _deviation, _numSegments);
 
     forward.push_back(cur);
     backward.push_back(end);
@@ -624,7 +658,7 @@ void CityGen::GeneratePrimary()
       backward.push_front(b);
 
       float len = distance(f, b);
-      if (len <= _terrain.scale || len >= prevLen)
+      if (len <= _terrain._scale || len >= prevLen)
       {
         for (const vec3& v : forward)
           _primary.push_back(v);
@@ -646,11 +680,11 @@ void CityGen::RenderUI()
   static bool open = true;
   ImGui::Begin("Properties", &open, ImVec2(200, 100));
 
-  if (ImGui::InputFloat("scale", &_terrain.scale, 1)
-    || ImGui::InputFloat("h-scale", &_terrain.heightScale, 0.1f))
+  if (ImGui::InputFloat("scale", &_terrain._scale, 1)
+    || ImGui::InputFloat("h-scale", &_terrain._heightScale, 0.1f))
   {
-    _terrain.scale = max(1.f, min(100.f, _terrain.scale));
-    _terrain.heightScale = max(0.1f, min(5.f, _terrain.heightScale));
+    _terrain._scale = max(1.f, min(100.f, _terrain._scale));
+    _terrain._heightScale = max(0.1f, min(5.f, _terrain._heightScale));
     _terrain.CreateMesh();
   }
 
@@ -681,12 +715,13 @@ void CityGen::Render()
 
   // calc proj and view matrix
   glMatrixMode(GL_PROJECTION);
-  g_proj = glm::perspective(60.0f, 1.333f, 1.f, 1000.0f);
+  g_proj = glm::perspective(60.0f, 1.333f, 1.f, 2000.0f);
   glLoadMatrixf(glm::value_ptr(g_proj));
 
   glMatrixMode(GL_MODELVIEW);
-  g_cameraPos = glm::vec3(0.0f, 300.0f, 200.0f);
-  mat4 dir = glm::lookAt(g_cameraPos, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0) );
+  g_cameraPos = glm::vec3(0.0f, 30, 0);
+  g_cameraPos = glm::vec3(0.0f, 500, 1500);
+  mat4 dir = glm::lookAt(g_cameraPos, glm::vec3(0, 0, 0), glm::vec3(0, 0, -1) );
   _rot = CITYGEN._arcball->createViewRotationMatrix();
   g_view = _rot * dir;
   glLoadMatrixf(glm::value_ptr(g_view));
@@ -700,15 +735,15 @@ void CityGen::Render()
 
   // draw terrain
   glColor4ub(0xfd, 0xf6, 0xe3, 255);
-  glVertexPointer(3, GL_FLOAT, 0, _terrain.verts.data());
-  glDrawElements(GL_TRIANGLES, _terrain.indices.size(), GL_UNSIGNED_INT, _terrain.indices.data());
+  glVertexPointer(3, GL_FLOAT, 0, _terrain._verts.data());
+  glDrawElements(GL_TRIANGLES, (GLsizei)_terrain._indices.size(), GL_UNSIGNED_INT, _terrain._indices.data());
 
   if (_drawNormals)
   {
-    vector<vec3> normals(_terrain.tris.size()*2);
-    for (size_t i = 0; i < _terrain.tris.size(); ++i)
+    vector<vec3> normals(_terrain._tris.size()*2);
+    for (size_t i = 0; i < _terrain._tris.size(); ++i)
     {
-      const Tri& tri = _terrain.tris[i];
+      const Tri& tri = _terrain._tris[i];
       vec3 p = (tri.v0 + tri.v1 + tri.v2) / 3.f;
       normals[i*2+0] = p;
       normals[i*2+1] = p + 10.f * tri.n;
@@ -716,22 +751,22 @@ void CityGen::Render()
 
     glColor4ub(0x0, 0xfd, 0x0, 255);
     glVertexPointer(3, GL_FLOAT, 0, normals.data());
-    glDrawArrays(GL_LINES, 0, normals.size());
+    glDrawArrays(GL_LINES, 0, (GLsizei)normals.size());
   }
 
   if (_drawDebugLines && !_debugLines.empty())
   {
     glColor4ub(0x0, 0xfd, 0x0, 255);
     glVertexPointer(3, GL_FLOAT, 0, _debugLines.data());
-    glDrawArrays(GL_LINES, 0, _debugLines.size());
+    glDrawArrays(GL_LINES, 0, (GLsizei)_debugLines.size());
   }
 
   // draw intersected tris
-  if (!_terrain.intersected.empty())
+  if (!_terrain._intersected.empty())
   {
     glColor4ub(0xfd, 0xf6, 0x0, 255);
-    glVertexPointer(3, GL_FLOAT, 0, _terrain.intersected.data());
-    glDrawArrays(GL_TRIANGLES, 0, _terrain.intersected.size());
+    glVertexPointer(3, GL_FLOAT, 0, _terrain._intersected.data());
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)_terrain._intersected.size());
   }
 
   // draw primary
@@ -739,7 +774,7 @@ void CityGen::Render()
   {
     glColor4ub(0xfd, 0x0, 0x0, 255);
     glVertexPointer(3, GL_FLOAT, 0, _primary.data());
-    glDrawArrays(GL_LINE_STRIP, 0, _primary.size());
+    glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)_primary.size());
   }
 
   glDisableClientState(GL_VERTEX_ARRAY);
