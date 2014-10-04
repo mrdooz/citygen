@@ -531,6 +531,54 @@ void CityGen::AddPoint(const vec3& pt)
   }
 }
 
+struct Stepper
+{
+  Stepper(const vec3& start, const vec3& end, float stepSize, float deviation, int numSegments)
+      : cur(start)
+      , end(end)
+      , stepSize(stepSize)
+      , deviation(deviation)
+      , numSegments(numSegments)
+  {
+    vec3 dir = normalize(end - cur);
+    angle = atan2(dir.y, dir.x);
+  }
+
+  vec3 Step(const vec3& goal)
+  {
+    // generate possible targets
+    float ns = numSegments;
+    float a = angle - deviation / ((ns - 1) / 2.f);
+    float s = deviation / ns;
+
+    float closest = FLT_MAX;
+    vec3 nextStep;
+
+    for (int i = 0; i < numSegments; ++i)
+    {
+      vec3 pt = cur + stepSize * vec3(cosf(a), 0, sinf(a));
+      float tmp = length(goal - pt);
+      if (tmp < closest)
+      {
+        closest = tmp;
+        nextStep = pt;
+        angle = a;
+      }
+
+      a += s;
+    }
+
+    cur = nextStep;
+    return cur;
+  }
+
+  vec3 cur, end;
+  float stepSize;
+  float deviation;
+  int numSegments;
+  float angle;
+};
+
 //----------------------------------------------------------------------------------
 void CityGen::GeneratePrimary()
 {
@@ -540,54 +588,45 @@ void CityGen::GeneratePrimary()
   _primary.clear();
   _debugLines.clear();
 
+  deque<vec3> backward;
+  vector<vec3> forward;
+
   for (int curIdx = 0; curIdx < _points.size() - 1; ++curIdx)
   {
+    backward.clear();
+    forward.clear();
+
     vec3 cur(_points[curIdx+0]);
     vec3 end(_points[curIdx+1]);
 
-    // calculations are done in the 2d-plane
-    // 0 degrees -> (1,0)
-    vec3 dir = normalize(end - cur);
-    float angle = atan2(dir.y, dir.x);
+    // make 2 steppers, one for each direction
+    Stepper forwardStepper(cur, end, _sampleSize, _deviation, _numSegments);
+    Stepper backwardStepper(end, cur, _sampleSize, _deviation, _numSegments);
+
+    forward.push_back(cur);
+    backward.push_back(end);
 
     float prevLen = FLT_MAX;
+    vec3 f = cur;
+    vec3 b = end;
+
     while (true)
     {
-      _primary.push_back(cur);
+      f = forwardStepper.Step(b);
+      b = backwardStepper.Step(f);
 
-      // generate possible targets
-      float a = angle - _deviation / ((_numSegments - 1) / 2.f);
-      float s = _deviation / _numSegments;
+      forward.push_back(f);
+      backward.push_front(b);
 
-      float closest = FLT_MAX;
-      vec3 nextStep;
-
-      for (int i = 0; i < _numSegments; ++i)
-      {
-        vec3 pt = cur + _sampleSize * vec3(cosf(a), 0, sinf(a));
-        float tmp = length(end - pt);
-        if (tmp < closest)
-        {
-          closest = tmp;
-          nextStep = pt;
-          angle = a;
-        }
-
-        _debugLines.push_back(cur);
-        _debugLines.push_back(pt);
-        a += s;
-      }
-
-      dir = normalize(nextStep - cur);
-
-      // step along the direction
-      cur += _sampleSize * dir;
-
-      // check if we're done with the current segment
-      float len = length(end - cur);
+      float len = distance(f, b);
       if (len <= _terrain.scale || len >= prevLen)
       {
-        _primary.push_back(end);
+        for (const vec3& v : forward)
+          _primary.push_back(v);
+
+        for (const vec3& v : backward)
+          _primary.push_back(v);
+
         break;
       }
       prevLen = len;
