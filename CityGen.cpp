@@ -1,9 +1,13 @@
 #include "citygen.hpp"
 #include "imgui_helpers.hpp"
+#include "utils.hpp"
+#pragma warning(push)
+#pragma warning(disable: 4244 4267)
+#include "protocol/city.pb.h"
+#pragma warning(pop)
 
 using namespace citygen;
 CityGen* CityGen::_instance;
-
 
 //----------------------------------------------------------------------------------
 void Terrain::CreateMesh()
@@ -230,11 +234,16 @@ bool CityGen::Init()
 
   //_plexus = FromProtocol(plexusSettings);
 
+
 #if _WIN32
+  _configFile = "/projects/citygen/config/city1.pb";
   _terrain._data = stbi_load("/projects/citygen/noise.tga", &_terrain._w, &_terrain._h, &_terrain._depth, 0);
 #else
   _terrain._data = stbi_load("/Users/dooz/projects/citygen/noise.tga", &_terrain._w, &_terrain._h, &_terrain._depth, 0);
 #endif
+
+  LoadSettings(_configFile.c_str());
+
   _terrain.CreateMesh();
 
   InitGL();
@@ -375,12 +384,12 @@ void CityGen::RenderUI()
   ImGui::Begin("File", &fileMenuOpen, ImVec2(200, 100));
   if (ImGui::Button("Load settings"))
   {
-
+    LoadSettings(_configFile.c_str());
   }
 
   if (ImGui::Button("Save settings"))
   {
-
+    SaveSettings(_configFile.c_str());
   }
 
   ImGui::End();
@@ -488,7 +497,6 @@ void CityGen::Render()
 
   glDisableClientState(GL_VERTEX_ARRAY);
 
-
   ImGui::Render();
   glfwSwapBuffers(g_window);
 }
@@ -517,13 +525,40 @@ bool CityGen::Close()
 //----------------------------------------------------------------------------------
 void CityGen::LoadSettings(const char* filename)
 {
+  protocol::City city;
+  if (!LoadProto(filename, &city))
+    return;
 
+  // load settings
+  protocol::Settings settings = city.settings();
+  protocol::StepSettings stepSettings = settings.step_settings();
+
+  _stepSettings.numSegments = stepSettings.num_segments();
+  _stepSettings.stepSize    = stepSettings.step_size();
+  _stepSettings.deviation   = stepSettings.deviation();
+  _stepSettings.roadHeight  = stepSettings.road_height();
+
+  // load primary
 }
 
 //----------------------------------------------------------------------------------
 void CityGen::SaveSettings(const char* filename)
 {
+  protocol::City city;
+  protocol::Settings* settings = city.mutable_settings();
+  protocol::StepSettings* stepSettings = settings->mutable_step_settings();
 
+  stepSettings->set_num_segments(_stepSettings.numSegments);
+  stepSettings->set_step_size(_stepSettings.stepSize);
+  stepSettings->set_deviation(_stepSettings.deviation);
+  stepSettings->set_road_height(_stepSettings.roadHeight);
+
+  string str = city.DebugString();
+  if (FILE* f = fopen(filename, "wt"))
+  {
+    fputs(str.c_str(), f);
+    fclose(f);
+  }
 }
 
 //----------------------------------------------------------------------------------

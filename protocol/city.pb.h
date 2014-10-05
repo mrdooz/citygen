@@ -34,12 +34,111 @@ void  protobuf_AddDesc_city_2eproto();
 void protobuf_AssignDesc_city_2eproto();
 void protobuf_ShutdownFile_city_2eproto();
 
+class Vector3;
 class StepSettings;
 class Settings;
-class Vector3;
 class City;
 
 // ===================================================================
+
+class Vector3 : public ::google::protobuf::Message {
+ public:
+  Vector3();
+  virtual ~Vector3();
+
+  Vector3(const Vector3& from);
+
+  inline Vector3& operator=(const Vector3& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Vector3& default_instance();
+
+  void Swap(Vector3* other);
+
+  // implements Message ----------------------------------------------
+
+  Vector3* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Vector3& from);
+  void MergeFrom(const Vector3& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional float x = 1;
+  inline bool has_x() const;
+  inline void clear_x();
+  static const int kXFieldNumber = 1;
+  inline float x() const;
+  inline void set_x(float value);
+
+  // optional float y = 2;
+  inline bool has_y() const;
+  inline void clear_y();
+  static const int kYFieldNumber = 2;
+  inline float y() const;
+  inline void set_y(float value);
+
+  // optional float z = 3;
+  inline bool has_z() const;
+  inline void clear_z();
+  static const int kZFieldNumber = 3;
+  inline float z() const;
+  inline void set_z(float value);
+
+  // @@protoc_insertion_point(class_scope:citygen.protocol.Vector3)
+ private:
+  inline void set_has_x();
+  inline void clear_has_x();
+  inline void set_has_y();
+  inline void clear_has_y();
+  inline void set_has_z();
+  inline void clear_has_z();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  float x_;
+  float y_;
+  float z_;
+  friend void  protobuf_AddDesc_city_2eproto();
+  friend void protobuf_AssignDesc_city_2eproto();
+  friend void protobuf_ShutdownFile_city_2eproto();
+
+  void InitAsDefaultInstance();
+  static Vector3* default_instance_;
+};
+// -------------------------------------------------------------------
 
 class StepSettings : public ::google::protobuf::Message {
  public:
@@ -203,118 +302,31 @@ class Settings : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
+  // optional .citygen.protocol.StepSettings step_settings = 1;
+  inline bool has_step_settings() const;
+  inline void clear_step_settings();
+  static const int kStepSettingsFieldNumber = 1;
+  inline const ::citygen::protocol::StepSettings& step_settings() const;
+  inline ::citygen::protocol::StepSettings* mutable_step_settings();
+  inline ::citygen::protocol::StepSettings* release_step_settings();
+  inline void set_allocated_step_settings(::citygen::protocol::StepSettings* step_settings);
+
   // @@protoc_insertion_point(class_scope:citygen.protocol.Settings)
  private:
+  inline void set_has_step_settings();
+  inline void clear_has_step_settings();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::uint32 _has_bits_[1];
   mutable int _cached_size_;
+  ::citygen::protocol::StepSettings* step_settings_;
   friend void  protobuf_AddDesc_city_2eproto();
   friend void protobuf_AssignDesc_city_2eproto();
   friend void protobuf_ShutdownFile_city_2eproto();
 
   void InitAsDefaultInstance();
   static Settings* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Vector3 : public ::google::protobuf::Message {
- public:
-  Vector3();
-  virtual ~Vector3();
-
-  Vector3(const Vector3& from);
-
-  inline Vector3& operator=(const Vector3& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Vector3& default_instance();
-
-  void Swap(Vector3* other);
-
-  // implements Message ----------------------------------------------
-
-  Vector3* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Vector3& from);
-  void MergeFrom(const Vector3& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional float x = 1;
-  inline bool has_x() const;
-  inline void clear_x();
-  static const int kXFieldNumber = 1;
-  inline float x() const;
-  inline void set_x(float value);
-
-  // optional float y = 2;
-  inline bool has_y() const;
-  inline void clear_y();
-  static const int kYFieldNumber = 2;
-  inline float y() const;
-  inline void set_y(float value);
-
-  // optional float z = 3;
-  inline bool has_z() const;
-  inline void clear_z();
-  static const int kZFieldNumber = 3;
-  inline float z() const;
-  inline void set_z(float value);
-
-  // @@protoc_insertion_point(class_scope:citygen.protocol.Vector3)
- private:
-  inline void set_has_x();
-  inline void clear_has_x();
-  inline void set_has_y();
-  inline void clear_has_y();
-  inline void set_has_z();
-  inline void clear_has_z();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::uint32 _has_bits_[1];
-  mutable int _cached_size_;
-  float x_;
-  float y_;
-  float z_;
-  friend void  protobuf_AddDesc_city_2eproto();
-  friend void protobuf_AssignDesc_city_2eproto();
-  friend void protobuf_ShutdownFile_city_2eproto();
-
-  void InitAsDefaultInstance();
-  static Vector3* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -414,6 +426,82 @@ class City : public ::google::protobuf::Message {
 
 
 // ===================================================================
+
+// Vector3
+
+// optional float x = 1;
+inline bool Vector3::has_x() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Vector3::set_has_x() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Vector3::clear_has_x() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Vector3::clear_x() {
+  x_ = 0;
+  clear_has_x();
+}
+inline float Vector3::x() const {
+  // @@protoc_insertion_point(field_get:citygen.protocol.Vector3.x)
+  return x_;
+}
+inline void Vector3::set_x(float value) {
+  set_has_x();
+  x_ = value;
+  // @@protoc_insertion_point(field_set:citygen.protocol.Vector3.x)
+}
+
+// optional float y = 2;
+inline bool Vector3::has_y() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void Vector3::set_has_y() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void Vector3::clear_has_y() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void Vector3::clear_y() {
+  y_ = 0;
+  clear_has_y();
+}
+inline float Vector3::y() const {
+  // @@protoc_insertion_point(field_get:citygen.protocol.Vector3.y)
+  return y_;
+}
+inline void Vector3::set_y(float value) {
+  set_has_y();
+  y_ = value;
+  // @@protoc_insertion_point(field_set:citygen.protocol.Vector3.y)
+}
+
+// optional float z = 3;
+inline bool Vector3::has_z() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void Vector3::set_has_z() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void Vector3::clear_has_z() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void Vector3::clear_z() {
+  z_ = 0;
+  clear_has_z();
+}
+inline float Vector3::z() const {
+  // @@protoc_insertion_point(field_get:citygen.protocol.Vector3.z)
+  return z_;
+}
+inline void Vector3::set_z(float value) {
+  set_has_z();
+  z_ = value;
+  // @@protoc_insertion_point(field_set:citygen.protocol.Vector3.z)
+}
+
+// -------------------------------------------------------------------
 
 // StepSettings
 
@@ -517,80 +605,45 @@ inline void StepSettings::set_road_height(float value) {
 
 // Settings
 
-// -------------------------------------------------------------------
-
-// Vector3
-
-// optional float x = 1;
-inline bool Vector3::has_x() const {
+// optional .citygen.protocol.StepSettings step_settings = 1;
+inline bool Settings::has_step_settings() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void Vector3::set_has_x() {
+inline void Settings::set_has_step_settings() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void Vector3::clear_has_x() {
+inline void Settings::clear_has_step_settings() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void Vector3::clear_x() {
-  x_ = 0;
-  clear_has_x();
+inline void Settings::clear_step_settings() {
+  if (step_settings_ != NULL) step_settings_->::citygen::protocol::StepSettings::Clear();
+  clear_has_step_settings();
 }
-inline float Vector3::x() const {
-  // @@protoc_insertion_point(field_get:citygen.protocol.Vector3.x)
-  return x_;
+inline const ::citygen::protocol::StepSettings& Settings::step_settings() const {
+  // @@protoc_insertion_point(field_get:citygen.protocol.Settings.step_settings)
+  return step_settings_ != NULL ? *step_settings_ : *default_instance_->step_settings_;
 }
-inline void Vector3::set_x(float value) {
-  set_has_x();
-  x_ = value;
-  // @@protoc_insertion_point(field_set:citygen.protocol.Vector3.x)
+inline ::citygen::protocol::StepSettings* Settings::mutable_step_settings() {
+  set_has_step_settings();
+  if (step_settings_ == NULL) step_settings_ = new ::citygen::protocol::StepSettings;
+  // @@protoc_insertion_point(field_mutable:citygen.protocol.Settings.step_settings)
+  return step_settings_;
 }
-
-// optional float y = 2;
-inline bool Vector3::has_y() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
+inline ::citygen::protocol::StepSettings* Settings::release_step_settings() {
+  clear_has_step_settings();
+  ::citygen::protocol::StepSettings* temp = step_settings_;
+  step_settings_ = NULL;
+  return temp;
 }
-inline void Vector3::set_has_y() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Vector3::clear_has_y() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Vector3::clear_y() {
-  y_ = 0;
-  clear_has_y();
-}
-inline float Vector3::y() const {
-  // @@protoc_insertion_point(field_get:citygen.protocol.Vector3.y)
-  return y_;
-}
-inline void Vector3::set_y(float value) {
-  set_has_y();
-  y_ = value;
-  // @@protoc_insertion_point(field_set:citygen.protocol.Vector3.y)
-}
-
-// optional float z = 3;
-inline bool Vector3::has_z() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Vector3::set_has_z() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Vector3::clear_has_z() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Vector3::clear_z() {
-  z_ = 0;
-  clear_has_z();
-}
-inline float Vector3::z() const {
-  // @@protoc_insertion_point(field_get:citygen.protocol.Vector3.z)
-  return z_;
-}
-inline void Vector3::set_z(float value) {
-  set_has_z();
-  z_ = value;
-  // @@protoc_insertion_point(field_set:citygen.protocol.Vector3.z)
+inline void Settings::set_allocated_step_settings(::citygen::protocol::StepSettings* step_settings) {
+  delete step_settings_;
+  step_settings_ = step_settings;
+  if (step_settings) {
+    set_has_step_settings();
+  } else {
+    clear_has_step_settings();
+  }
+  // @@protoc_insertion_point(field_set_allocated:citygen.protocol.Settings.step_settings)
 }
 
 // -------------------------------------------------------------------

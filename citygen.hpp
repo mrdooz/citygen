@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace bristol
 {
   class WindowEventManager;

@@ -21,15 +21,15 @@ namespace protocol {
 
 namespace {
 
+const ::google::protobuf::Descriptor* Vector3_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  Vector3_reflection_ = NULL;
 const ::google::protobuf::Descriptor* StepSettings_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   StepSettings_reflection_ = NULL;
 const ::google::protobuf::Descriptor* Settings_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   Settings_reflection_ = NULL;
-const ::google::protobuf::Descriptor* Vector3_descriptor_ = NULL;
-const ::google::protobuf::internal::GeneratedMessageReflection*
-  Vector3_reflection_ = NULL;
 const ::google::protobuf::Descriptor* City_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   City_reflection_ = NULL;
@@ -43,7 +43,24 @@ void protobuf_AssignDesc_city_2eproto() {
     ::google::protobuf::DescriptorPool::generated_pool()->FindFileByName(
       "city.proto");
   GOOGLE_CHECK(file != NULL);
-  StepSettings_descriptor_ = file->message_type(0);
+  Vector3_descriptor_ = file->message_type(0);
+  static const int Vector3_offsets_[3] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Vector3, x_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Vector3, y_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Vector3, z_),
+  };
+  Vector3_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Vector3_descriptor_,
+      Vector3::default_instance_,
+      Vector3_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Vector3, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Vector3, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Vector3));
+  StepSettings_descriptor_ = file->message_type(1);
   static const int StepSettings_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StepSettings, num_segments_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StepSettings, step_size_),
@@ -61,8 +78,9 @@ void protobuf_AssignDesc_city_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(StepSettings));
-  Settings_descriptor_ = file->message_type(1);
+  Settings_descriptor_ = file->message_type(2);
   static const int Settings_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Settings, step_settings_),
   };
   Settings_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -75,23 +93,6 @@ void protobuf_AssignDesc_city_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Settings));
-  Vector3_descriptor_ = file->message_type(2);
-  static const int Vector3_offsets_[3] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Vector3, x_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Vector3, y_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Vector3, z_),
-  };
-  Vector3_reflection_ =
-    new ::google::protobuf::internal::GeneratedMessageReflection(
-      Vector3_descriptor_,
-      Vector3::default_instance_,
-      Vector3_offsets_,
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Vector3, _has_bits_[0]),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Vector3, _unknown_fields_),
-      -1,
-      ::google::protobuf::DescriptorPool::generated_pool(),
-      ::google::protobuf::MessageFactory::generated_factory(),
-      sizeof(Vector3));
   City_descriptor_ = file->message_type(3);
   static const int City_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(City, settings_),
@@ -121,11 +122,11 @@ inline void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    Vector3_descriptor_, &Vector3::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     StepSettings_descriptor_, &StepSettings::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Settings_descriptor_, &Settings::default_instance());
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-    Vector3_descriptor_, &Vector3::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     City_descriptor_, &City::default_instance());
 }
@@ -133,12 +134,12 @@ void protobuf_RegisterTypes(const ::std::string&) {
 }  // namespace
 
 void protobuf_ShutdownFile_city_2eproto() {
+  delete Vector3::default_instance_;
+  delete Vector3_reflection_;
   delete StepSettings::default_instance_;
   delete StepSettings_reflection_;
   delete Settings::default_instance_;
   delete Settings_reflection_;
-  delete Vector3::default_instance_;
-  delete Vector3_reflection_;
   delete City::default_instance_;
   delete City_reflection_;
 }
@@ -150,23 +151,25 @@ void protobuf_AddDesc_city_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\ncity.proto\022\020citygen.protocol\"s\n\014StepSe"
-    "ttings\022\030\n\014num_segments\030\001 \001(\005:\00220\022\026\n\tstep"
-    "_size\030\002 \001(\002:\0030.5\022\031\n\tdeviation\030\003 \001(\002:\0060.7"
-    "854\022\026\n\013road_height\030\004 \001(\002:\0015\"\n\n\010Settings\""
-    "*\n\007Vector3\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 "
-    "\001(\002\"f\n\004City\022,\n\010settings\030\001 \001(\0132\032.citygen."
-    "protocol.Settings\0220\n\rprimary_nodes\030\002 \003(\013"
-    "2\031.citygen.protocol.Vector3", 307);
+    "\n\ncity.proto\022\020citygen.protocol\"*\n\007Vector"
+    "3\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\"s\n\014St"
+    "epSettings\022\030\n\014num_segments\030\001 \001(\005:\00220\022\026\n\t"
+    "step_size\030\002 \001(\002:\0030.5\022\031\n\tdeviation\030\003 \001(\002:"
+    "\0060.7854\022\026\n\013road_height\030\004 \001(\002:\0015\"A\n\010Setti"
+    "ngs\0225\n\rstep_settings\030\001 \001(\0132\036.citygen.pro"
+    "tocol.StepSettings\"f\n\004City\022,\n\010settings\030\001"
+    " \001(\0132\032.citygen.protocol.Settings\0220\n\rprim"
+    "ary_nodes\030\002 \003(\0132\031.citygen.protocol.Vecto"
+    "r3", 362);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "city.proto", &protobuf_RegisterTypes);
+  Vector3::default_instance_ = new Vector3();
   StepSettings::default_instance_ = new StepSettings();
   Settings::default_instance_ = new Settings();
-  Vector3::default_instance_ = new Vector3();
   City::default_instance_ = new City();
+  Vector3::default_instance_->InitAsDefaultInstance();
   StepSettings::default_instance_->InitAsDefaultInstance();
   Settings::default_instance_->InitAsDefaultInstance();
-  Vector3::default_instance_->InitAsDefaultInstance();
   City::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_city_2eproto);
 }
@@ -177,6 +180,312 @@ struct StaticDescriptorInitializer_city_2eproto {
     protobuf_AddDesc_city_2eproto();
   }
 } static_descriptor_initializer_city_2eproto_;
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int Vector3::kXFieldNumber;
+const int Vector3::kYFieldNumber;
+const int Vector3::kZFieldNumber;
+#endif  // !_MSC_VER
+
+Vector3::Vector3()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:citygen.protocol.Vector3)
+}
+
+void Vector3::InitAsDefaultInstance() {
+}
+
+Vector3::Vector3(const Vector3& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+  // @@protoc_insertion_point(copy_constructor:citygen.protocol.Vector3)
+}
+
+void Vector3::SharedCtor() {
+  _cached_size_ = 0;
+  x_ = 0;
+  y_ = 0;
+  z_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+Vector3::~Vector3() {
+  // @@protoc_insertion_point(destructor:citygen.protocol.Vector3)
+  SharedDtor();
+}
+
+void Vector3::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void Vector3::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Vector3::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return Vector3_descriptor_;
+}
+
+const Vector3& Vector3::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_city_2eproto();
+  return *default_instance_;
+}
+
+Vector3* Vector3::default_instance_ = NULL;
+
+Vector3* Vector3::New() const {
+  return new Vector3;
+}
+
+void Vector3::Clear() {
+#define OFFSET_OF_FIELD_(f) (reinterpret_cast<char*>(      \
+  &reinterpret_cast<Vector3*>(16)->f) - \
+   reinterpret_cast<char*>(16))
+
+#define ZR_(first, last) do {                              \
+    size_t f = OFFSET_OF_FIELD_(first);                    \
+    size_t n = OFFSET_OF_FIELD_(last) - f + sizeof(last);  \
+    ::memset(&first, 0, n);                                \
+  } while (0)
+
+  ZR_(x_, z_);
+
+#undef OFFSET_OF_FIELD_
+#undef ZR_
+
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool Vector3::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:citygen.protocol.Vector3)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(127);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional float x = 1;
+      case 1: {
+        if (tag == 13) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &x_)));
+          set_has_x();
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(21)) goto parse_y;
+        break;
+      }
+
+      // optional float y = 2;
+      case 2: {
+        if (tag == 21) {
+         parse_y:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &y_)));
+          set_has_y();
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(29)) goto parse_z;
+        break;
+      }
+
+      // optional float z = 3;
+      case 3: {
+        if (tag == 29) {
+         parse_z:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &z_)));
+          set_has_z();
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectAtEnd()) goto success;
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:citygen.protocol.Vector3)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:citygen.protocol.Vector3)
+  return false;
+#undef DO_
+}
+
+void Vector3::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:citygen.protocol.Vector3)
+  // optional float x = 1;
+  if (has_x()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(1, this->x(), output);
+  }
+
+  // optional float y = 2;
+  if (has_y()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(2, this->y(), output);
+  }
+
+  // optional float z = 3;
+  if (has_z()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(3, this->z(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+  // @@protoc_insertion_point(serialize_end:citygen.protocol.Vector3)
+}
+
+::google::protobuf::uint8* Vector3::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // @@protoc_insertion_point(serialize_to_array_start:citygen.protocol.Vector3)
+  // optional float x = 1;
+  if (has_x()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(1, this->x(), target);
+  }
+
+  // optional float y = 2;
+  if (has_y()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(2, this->y(), target);
+  }
+
+  // optional float z = 3;
+  if (has_z()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(3, this->z(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:citygen.protocol.Vector3)
+  return target;
+}
+
+int Vector3::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional float x = 1;
+    if (has_x()) {
+      total_size += 1 + 4;
+    }
+
+    // optional float y = 2;
+    if (has_y()) {
+      total_size += 1 + 4;
+    }
+
+    // optional float z = 3;
+    if (has_z()) {
+      total_size += 1 + 4;
+    }
+
+  }
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Vector3::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const Vector3* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Vector3*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void Vector3::MergeFrom(const Vector3& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_x()) {
+      set_x(from.x());
+    }
+    if (from.has_y()) {
+      set_y(from.y());
+    }
+    if (from.has_z()) {
+      set_z(from.z());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void Vector3::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Vector3::CopyFrom(const Vector3& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Vector3::IsInitialized() const {
+
+  return true;
+}
+
+void Vector3::Swap(Vector3* other) {
+  if (other != this) {
+    std::swap(x_, other->x_);
+    std::swap(y_, other->y_);
+    std::swap(z_, other->z_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata Vector3::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = Vector3_descriptor_;
+  metadata.reflection = Vector3_reflection_;
+  return metadata;
+}
+
 
 // ===================================================================
 
@@ -516,6 +825,7 @@ void StepSettings::Swap(StepSettings* other) {
 // ===================================================================
 
 #ifndef _MSC_VER
+const int Settings::kStepSettingsFieldNumber;
 #endif  // !_MSC_VER
 
 Settings::Settings()
@@ -525,6 +835,7 @@ Settings::Settings()
 }
 
 void Settings::InitAsDefaultInstance() {
+  step_settings_ = const_cast< ::citygen::protocol::StepSettings*>(&::citygen::protocol::StepSettings::default_instance());
 }
 
 Settings::Settings(const Settings& from)
@@ -536,6 +847,7 @@ Settings::Settings(const Settings& from)
 
 void Settings::SharedCtor() {
   _cached_size_ = 0;
+  step_settings_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -546,6 +858,7 @@ Settings::~Settings() {
 
 void Settings::SharedDtor() {
   if (this != default_instance_) {
+    delete step_settings_;
   }
 }
 
@@ -571,6 +884,9 @@ Settings* Settings::New() const {
 }
 
 void Settings::Clear() {
+  if (has_step_settings()) {
+    if (step_settings_ != NULL) step_settings_->::citygen::protocol::StepSettings::Clear();
+  }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -584,14 +900,31 @@ bool Settings::MergePartialFromCodedStream(
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(127);
     tag = p.first;
     if (!p.second) goto handle_unusual;
-  handle_unusual:
-    if (tag == 0 ||
-        ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-        ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-      goto success;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional .citygen.protocol.StepSettings step_settings = 1;
+      case 1: {
+        if (tag == 10) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_step_settings()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectAtEnd()) goto success;
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
     }
-    DO_(::google::protobuf::internal::WireFormat::SkipField(
-          input, tag, mutable_unknown_fields()));
   }
 success:
   // @@protoc_insertion_point(parse_success:citygen.protocol.Settings)
@@ -605,6 +938,12 @@ failure:
 void Settings::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // @@protoc_insertion_point(serialize_start:citygen.protocol.Settings)
+  // optional .citygen.protocol.StepSettings step_settings = 1;
+  if (has_step_settings()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      1, this->step_settings(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -615,6 +954,13 @@ void Settings::SerializeWithCachedSizes(
 ::google::protobuf::uint8* Settings::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
   // @@protoc_insertion_point(serialize_to_array_start:citygen.protocol.Settings)
+  // optional .citygen.protocol.StepSettings step_settings = 1;
+  if (has_step_settings()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        1, this->step_settings(), target);
+  }
+
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -626,6 +972,15 @@ void Settings::SerializeWithCachedSizes(
 int Settings::ByteSize() const {
   int total_size = 0;
 
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional .citygen.protocol.StepSettings step_settings = 1;
+    if (has_step_settings()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->step_settings());
+    }
+
+  }
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -651,6 +1006,11 @@ void Settings::MergeFrom(const ::google::protobuf::Message& from) {
 
 void Settings::MergeFrom(const Settings& from) {
   GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_step_settings()) {
+      mutable_step_settings()->::citygen::protocol::StepSettings::MergeFrom(from.step_settings());
+    }
+  }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
 
@@ -673,6 +1033,8 @@ bool Settings::IsInitialized() const {
 
 void Settings::Swap(Settings* other) {
   if (other != this) {
+    std::swap(step_settings_, other->step_settings_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
   }
@@ -683,312 +1045,6 @@ void Settings::Swap(Settings* other) {
   ::google::protobuf::Metadata metadata;
   metadata.descriptor = Settings_descriptor_;
   metadata.reflection = Settings_reflection_;
-  return metadata;
-}
-
-
-// ===================================================================
-
-#ifndef _MSC_VER
-const int Vector3::kXFieldNumber;
-const int Vector3::kYFieldNumber;
-const int Vector3::kZFieldNumber;
-#endif  // !_MSC_VER
-
-Vector3::Vector3()
-  : ::google::protobuf::Message() {
-  SharedCtor();
-  // @@protoc_insertion_point(constructor:citygen.protocol.Vector3)
-}
-
-void Vector3::InitAsDefaultInstance() {
-}
-
-Vector3::Vector3(const Vector3& from)
-  : ::google::protobuf::Message() {
-  SharedCtor();
-  MergeFrom(from);
-  // @@protoc_insertion_point(copy_constructor:citygen.protocol.Vector3)
-}
-
-void Vector3::SharedCtor() {
-  _cached_size_ = 0;
-  x_ = 0;
-  y_ = 0;
-  z_ = 0;
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-}
-
-Vector3::~Vector3() {
-  // @@protoc_insertion_point(destructor:citygen.protocol.Vector3)
-  SharedDtor();
-}
-
-void Vector3::SharedDtor() {
-  if (this != default_instance_) {
-  }
-}
-
-void Vector3::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-}
-const ::google::protobuf::Descriptor* Vector3::descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return Vector3_descriptor_;
-}
-
-const Vector3& Vector3::default_instance() {
-  if (default_instance_ == NULL) protobuf_AddDesc_city_2eproto();
-  return *default_instance_;
-}
-
-Vector3* Vector3::default_instance_ = NULL;
-
-Vector3* Vector3::New() const {
-  return new Vector3;
-}
-
-void Vector3::Clear() {
-#define OFFSET_OF_FIELD_(f) (reinterpret_cast<char*>(      \
-  &reinterpret_cast<Vector3*>(16)->f) - \
-   reinterpret_cast<char*>(16))
-
-#define ZR_(first, last) do {                              \
-    size_t f = OFFSET_OF_FIELD_(first);                    \
-    size_t n = OFFSET_OF_FIELD_(last) - f + sizeof(last);  \
-    ::memset(&first, 0, n);                                \
-  } while (0)
-
-  ZR_(x_, z_);
-
-#undef OFFSET_OF_FIELD_
-#undef ZR_
-
-  ::memset(_has_bits_, 0, sizeof(_has_bits_));
-  mutable_unknown_fields()->Clear();
-}
-
-bool Vector3::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:citygen.protocol.Vector3)
-  for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(127);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional float x = 1;
-      case 1: {
-        if (tag == 13) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
-                 input, &x_)));
-          set_has_x();
-        } else {
-          goto handle_unusual;
-        }
-        if (input->ExpectTag(21)) goto parse_y;
-        break;
-      }
-
-      // optional float y = 2;
-      case 2: {
-        if (tag == 21) {
-         parse_y:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
-                 input, &y_)));
-          set_has_y();
-        } else {
-          goto handle_unusual;
-        }
-        if (input->ExpectTag(29)) goto parse_z;
-        break;
-      }
-
-      // optional float z = 3;
-      case 3: {
-        if (tag == 29) {
-         parse_z:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
-                 input, &z_)));
-          set_has_z();
-        } else {
-          goto handle_unusual;
-        }
-        if (input->ExpectAtEnd()) goto success;
-        break;
-      }
-
-      default: {
-      handle_unusual:
-        if (tag == 0 ||
-            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-          goto success;
-        }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, mutable_unknown_fields()));
-        break;
-      }
-    }
-  }
-success:
-  // @@protoc_insertion_point(parse_success:citygen.protocol.Vector3)
-  return true;
-failure:
-  // @@protoc_insertion_point(parse_failure:citygen.protocol.Vector3)
-  return false;
-#undef DO_
-}
-
-void Vector3::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:citygen.protocol.Vector3)
-  // optional float x = 1;
-  if (has_x()) {
-    ::google::protobuf::internal::WireFormatLite::WriteFloat(1, this->x(), output);
-  }
-
-  // optional float y = 2;
-  if (has_y()) {
-    ::google::protobuf::internal::WireFormatLite::WriteFloat(2, this->y(), output);
-  }
-
-  // optional float z = 3;
-  if (has_z()) {
-    ::google::protobuf::internal::WireFormatLite::WriteFloat(3, this->z(), output);
-  }
-
-  if (!unknown_fields().empty()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        unknown_fields(), output);
-  }
-  // @@protoc_insertion_point(serialize_end:citygen.protocol.Vector3)
-}
-
-::google::protobuf::uint8* Vector3::SerializeWithCachedSizesToArray(
-    ::google::protobuf::uint8* target) const {
-  // @@protoc_insertion_point(serialize_to_array_start:citygen.protocol.Vector3)
-  // optional float x = 1;
-  if (has_x()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(1, this->x(), target);
-  }
-
-  // optional float y = 2;
-  if (has_y()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(2, this->y(), target);
-  }
-
-  // optional float z = 3;
-  if (has_z()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(3, this->z(), target);
-  }
-
-  if (!unknown_fields().empty()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        unknown_fields(), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:citygen.protocol.Vector3)
-  return target;
-}
-
-int Vector3::ByteSize() const {
-  int total_size = 0;
-
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // optional float x = 1;
-    if (has_x()) {
-      total_size += 1 + 4;
-    }
-
-    // optional float y = 2;
-    if (has_y()) {
-      total_size += 1 + 4;
-    }
-
-    // optional float z = 3;
-    if (has_z()) {
-      total_size += 1 + 4;
-    }
-
-  }
-  if (!unknown_fields().empty()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        unknown_fields());
-  }
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = total_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
-  return total_size;
-}
-
-void Vector3::MergeFrom(const ::google::protobuf::Message& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  const Vector3* source =
-    ::google::protobuf::internal::dynamic_cast_if_available<const Vector3*>(
-      &from);
-  if (source == NULL) {
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-  } else {
-    MergeFrom(*source);
-  }
-}
-
-void Vector3::MergeFrom(const Vector3& from) {
-  GOOGLE_CHECK_NE(&from, this);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_x()) {
-      set_x(from.x());
-    }
-    if (from.has_y()) {
-      set_y(from.y());
-    }
-    if (from.has_z()) {
-      set_z(from.z());
-    }
-  }
-  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
-}
-
-void Vector3::CopyFrom(const ::google::protobuf::Message& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-void Vector3::CopyFrom(const Vector3& from) {
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool Vector3::IsInitialized() const {
-
-  return true;
-}
-
-void Vector3::Swap(Vector3* other) {
-  if (other != this) {
-    std::swap(x_, other->x_);
-    std::swap(y_, other->y_);
-    std::swap(z_, other->z_);
-    std::swap(_has_bits_[0], other->_has_bits_[0]);
-    _unknown_fields_.Swap(&other->_unknown_fields_);
-    std::swap(_cached_size_, other->_cached_size_);
-  }
-}
-
-::google::protobuf::Metadata Vector3::GetMetadata() const {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::Metadata metadata;
-  metadata.descriptor = Vector3_descriptor_;
-  metadata.reflection = Vector3_reflection_;
   return metadata;
 }
 
