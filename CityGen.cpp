@@ -299,14 +299,6 @@ void UpdateImGui()
 }
 
 //----------------------------------------------------------------------------------
-Terrain::Terrain()
-{
-  memset(this, 0, sizeof(Terrain));
-  _scale = 20;
-  _heightScale = 1;
-}
-
-//----------------------------------------------------------------------------------
 void Terrain::CreateMesh()
 {
   int w = _w;
@@ -568,13 +560,11 @@ void CityGen::AddPoint(const vec3& pt)
 //----------------------------------------------------------------------------------
 struct Stepper
 {
-  Stepper(Terrain* terrain, const vec3& start, const vec3& end, float stepSize, float deviation, int numSegments)
+  Stepper(Terrain* terrain, StepSettings* settings, const vec3& start, const vec3& end)
       : terrain(terrain)
+      , settings(settings)
       , cur(start)
       , end(end)
-      , stepSize(stepSize)
-      , deviation(deviation)
-      , numSegments(numSegments)
   {
     vec3 dir = normalize(end - cur);
     angle = atan2(dir.z, dir.x);
@@ -583,20 +573,19 @@ struct Stepper
   vec3 Step(const vec3& goal)
   {
     // generate possible targets
-    float ns = (float)numSegments;
-    float a = angle - deviation / (ns-1);
-    float s = 2 * deviation / ns;
+    float ns = (float)settings->numSegments;
+    float a = angle - settings->deviation / (ns-1);
+    float s = 2 * settings->deviation / ns;
 
     float closest = FLT_MAX;
     vec3 nextStep;
 
-    for (int i = 0; i < numSegments; ++i)
+    for (int i = 0; i < settings->numSegments; ++i)
     {
-      vec3 pt = cur + stepSize * vec3(cosf(a), 0, sinf(a));
+      vec3 pt = cur + settings->stepSize * vec3(cosf(a), 0, sinf(a));
 
       Tri* tri = terrain->FindTri(pt, &pt);
       float tmp = length(goal - pt);
-      //tmp = fabs(cur.y - pt2.y);
       if (tmp < closest)
       {
         closest = tmp;
@@ -611,10 +600,8 @@ struct Stepper
   }
 
   Terrain* terrain;
+  StepSettings *settings;
   vec3 cur, end;
-  float stepSize;
-  float deviation;
-  int numSegments;
   float angle;
 };
 
@@ -639,8 +626,8 @@ void CityGen::GeneratePrimary()
     vec3 end(_points[curIdx+1]);
 
     // make 2 steppers, one for each direction
-    Stepper forwardStepper(&_terrain, cur, end, _stepSize, _deviation, _numSegments);
-    Stepper backwardStepper(&_terrain, end, cur, _stepSize, _deviation, _numSegments);
+    Stepper forwardStepper(&_terrain, &_stepSettings, cur, end);
+    Stepper backwardStepper(&_terrain, &_stepSettings, end, cur);
 
     forward.push_back(cur);
     backward.push_back(end);
@@ -688,9 +675,10 @@ void CityGen::RenderUI()
     _terrain.CreateMesh();
   }
 
-  if (ImGui::InputInt("# segments", &_numSegments, 1, 5)
-    || ImGui::InputFloat("sample size", &_stepSize, 0.1f, 5)
-    || ImGui::InputFloat("deviation", &_deviation, DEG_TO_RAD(1)))
+  if (ImGui::InputInt("# segments", &_stepSettings.numSegments, 1, 5)
+    || ImGui::InputFloat("sample size", &_stepSettings.stepSize, 0.1f, 5)
+    || ImGui::InputFloat("deviation", &_stepSettings.deviation, DEG_TO_RAD(1))
+    || ImGui::InputFloat("deviation", &_stepSettings.roadHeight, 1))
   {
     GeneratePrimary();
   }

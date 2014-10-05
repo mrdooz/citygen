@@ -19,7 +19,6 @@ namespace citygen
 
   struct Terrain
   {
-    Terrain();
     void CreateMesh();
     void CalcIntersection(const vec3& org, const vec3& dir);
     Tri* FindTri(const vec3& v, vec3* out);
@@ -29,10 +28,23 @@ namespace citygen
     vector<vec3> _intersected;
     vec3 _minValues, _maxValues;
     vec3 _intersection;
-    u8* _data;
+    u8* _data = nullptr;
     int _w, _h, _depth;
-    float _scale;
-    float _heightScale;
+    float _scale = 20.f;
+    float _heightScale = 1.5f;
+  };
+
+  struct StepSettings
+  {
+    int numSegments = 20;
+    float stepSize = 0.5f;
+    float deviation = DEG_TO_RAD(45);
+    float roadHeight = 5;
+  };
+
+  struct State
+  {
+
   };
 
   class CityGen
@@ -85,11 +97,10 @@ namespace citygen
 
     bool _drawNormals;
 
-    int _numSegments = 20;
-    float _stepSize = 0.5f;
-    float _deviation = DEG_TO_RAD(20);
-
     glm::mat4x4 _rot;
+
+    StepSettings _stepSettings;
+    State _state;
   };
 
 #define CITYGEN CityGen::Instance()
