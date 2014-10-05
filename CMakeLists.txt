@@ -5,10 +5,12 @@ project (citygen)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
 # todo, why is this required to be upper case?
 find_package(BRISTOL COMPONENTS main)
+find_package(Protobuf REQUIRED)
 
 include_directories(${BRISTOL_INCLUDE_DIR})
+include_directories(${PROTOBUF_INCLUDE_DIR})
 
-file(GLOB SRC "*.cpp" "*.hpp" "imgui/*")
+file(GLOB SRC "*.cpp" "*.hpp" "protocol/*" "imgui/*")
 
 add_executable(${PROJECT_NAME} ${SRC})
 
@@ -35,6 +37,7 @@ if (APPLE)
     "/Users/dooz/Library/Caches/appCode30/DerivedData/bristol-e7802bc5/Build/Products/Debug/libbristol_main.a"
     "/usr/local/Cellar/glew/1.10.0/lib/libGLEW.a"
     "/usr/local/lib/libglfw3.a"
+    "/opt/local/protobuf/lib/libprotobuf.a"
     ${OPEN_GL}
     ${COCOA}
     ${IOKIT}
@@ -54,7 +57,7 @@ if (APPLE)
 else()
   if (MSVC)
     # glob all the root level .cpp files
-    file(GLOB ROOT_SRC "*.cpp")
+    file(GLOB ROOT_SRC "*.cpp" "protocol/*.cpp")
 
     include_directories(
       "/projects/glew-1.10.0/include"
@@ -80,6 +83,7 @@ else()
    
     target_link_libraries(${PROJECT_NAME}
       debug ${BRISTOL_MAIN_LIBRARY_DEBUG} optimized ${BRISTOL_MAIN_LIBRARY_RELEASE}
+      debug ${PROTOBUF_LIBRARY_DEBUG} optimized ${PROTOBUF_LIBRARY}
       )
   endif(MSVC)
 endif()

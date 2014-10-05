@@ -27,10 +27,10 @@ namespace citygen
 
   public:
     Arcball( int window_width, int window_height, GLfloat roll_speed = 1.0f, bool x_axis = true, bool y_axis = true );
-    glm::vec3 toScreenCoord( double x, double y );
+    glm::vec3 toScreenCoord( float x, float y );
 
     void mouseButtonCallback( GLFWwindow * window, int button, int action, int mods );
-    void cursorCallback( GLFWwindow *window, double x, double y );
+    void cursorCallback( GLFWwindow *window, float x, float y );
 
     glm::mat4 createViewRotationMatrix();
     glm::mat4 createModelRotationMatrix( glm::mat4& view_matrix );

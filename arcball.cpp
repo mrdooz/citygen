@@ -31,7 +31,7 @@ Arcball::Arcball( int window_width, int window_height, GLfloat roll_speed, bool 
  * Convert the mouse cursor coordinate on the window (i.e. from (0,0) to (windowWidth, windowHeight))
  * into normalized screen coordinate (i.e. (-1, -1) to (1, 1)
  */
-glm::vec3 Arcball::toScreenCoord( double x, double y ) {
+glm::vec3 Arcball::toScreenCoord( float x, float y ) {
     glm::vec3 coord(0.0f);
     
     if( xAxis )
@@ -45,8 +45,8 @@ glm::vec3 Arcball::toScreenCoord( double x, double y ) {
     coord.y = glm::clamp( coord.y, -1.0f, 1.0f );
     
     float length_squared = coord.x * coord.x + coord.y * coord.y;
-    if( length_squared <= 1.0 )
-        coord.z = sqrt( 1.0 - length_squared );
+    if( length_squared <= 1.0f )
+        coord.z = sqrtf( 1.0f - length_squared );
     else
         coord = glm::normalize( coord );
     
@@ -63,7 +63,7 @@ void Arcball::mouseButtonCallback( GLFWwindow * window, int button, int action, 
     mouseEvent = ( action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT );
 }
 
-void Arcball::cursorCallback( GLFWwindow *window, double x, double y ){
+void Arcball::cursorCallback( GLFWwindow *window, float x, float y ){
     if( mouseEvent == 0 )
         return;
     else if( mouseEvent == 1 ) {

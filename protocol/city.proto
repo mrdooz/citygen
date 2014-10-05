@@ -1,0 +1,27 @@
+package citygen.protocol;
+
+message StepSettings
+{
+  optional int32 num_segments = 1 [default = 20];
+  optional float step_size = 2 [default = 0.5];
+  // 45 degrees
+  optional float deviation = 3 [default = 0.7854];
+  optional float road_height = 4 [default = 5];
+}
+
+message Settings
+{
+}
+
+message Vector3
+{
+  optional float x = 1;
+  optional float y = 2;
+  optional float z = 3;
+}
+
+message City
+{
+  optional Settings settings = 1;
+  repeated Vector3 primary_nodes = 2;
+}

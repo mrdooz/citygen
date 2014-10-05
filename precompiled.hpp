@@ -54,6 +54,11 @@
 #define DEG_TO_RAD(x) ((x)/180.f*3.1415926f)
 #define RAD_TO_DEG(x) ((x)/3.1415926f*180)
 
+#pragma warning(push)
+#pragma warning(disable: 4244 4267)
+#include <google/protobuf/text_format.h>
+#pragma warning(pop)
+
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -116,3 +121,22 @@ namespace citygen
 
 #include "imgui/stb_image.h"                  // for .png loading
 #include "imgui/imgui.h"
+
+#ifdef _MSC_VER
+#pragma warning (disable: 4996)         // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
+#include <Windows.h>
+#include <Imm.h>
+#pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "glu32.lib")
+#pragma comment(lib, "imm32.lib")
+#if _DEBUG
+#pragma comment(lib, "/projects/glfw/src/debug/glfw3.lib")
+#else
+#pragma comment(lib, "/projects/glfw/src/release/glfw3.lib")
+#endif
+#endif
+
+#include "imgui/imgui.h"
+
+#include "arcball.hpp"
+#include "glm/gtx/intersect.hpp"

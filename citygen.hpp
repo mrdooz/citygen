@@ -78,6 +78,9 @@ namespace citygen
     void GeneratePrimary();
     void RenderUI();
 
+    void LoadSettings(const char* filename);
+    void SaveSettings(const char* filename);
+
     static CityGen* _instance;
     string _appRoot;
     //ptime _lastUpdate;
@@ -101,6 +104,8 @@ namespace citygen
 
     StepSettings _stepSettings;
     State _state;
+
+    string _configFile;
   };
 
 #define CITYGEN CityGen::Instance()
