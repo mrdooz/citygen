@@ -33,4 +33,57 @@ namespace citygen
   vec3 FromProtocol(const protocol::Vector3& v);
   void ToProtocol(const vec3& v, protocol::Vector3* out);
 
+  //----------------------------------------------------------------------------------
+  struct BitSet
+  {
+    BitSet(u32 bits)
+      : len(bits/8+1)
+      , mem(new u8[len])
+    {
+      memset(mem, 0, len);
+    }
+
+    ~BitSet()
+    {
+      delete[] mem;
+    }
+
+    bool IsSet(u32 ofs) const
+    {
+      assert(ofs/8 < len);
+
+      u32 byteOfs = ofs / 8;
+      u32 shift   = ofs % 8;
+      u8 mask     = (1 << shift);
+
+      return !!(mem[byteOfs] & mask);
+    }
+
+    void Set(u32 ofs)
+    {
+      assert(ofs/8 < len);
+
+      u32 byteOfs = ofs / 8;
+      u32 shift   = ofs % 8;
+      u8 mask     = (1 << shift);
+      mem[byteOfs] |= mask;
+    }
+
+    void Clear(u32 ofs)
+    {
+      u32 byteOfs = ofs / 8;
+      u32 shift   = ofs % 8;
+      u8 mask     = (1 << shift);
+      mem[byteOfs] &= ~mask;
+    }
+
+    bool operator[](u32 ofs) const
+    {
+      return IsSet(ofs);
+    }
+
+    u32 len;
+    u8* mem;
+  };
+
 }

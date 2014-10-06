@@ -8,6 +8,7 @@ namespace citygen
 
   struct Vertex
   {
+    vec3 pos;
     Tri* tri;
     int id;
     vector<Vertex*> edges;
@@ -19,6 +20,8 @@ namespace citygen
     void DeleteVertex(Vertex* vtx);
 
     void AddEdge(Vertex* a, Vertex* b);
+
+    void CalcCycles();
 
     unordered_map<Tri*, Vertex*> triToVerts;
     vector<Vertex*> verts;

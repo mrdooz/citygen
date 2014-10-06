@@ -104,7 +104,7 @@ void CityGen::Update()
 //----------------------------------------------------------------------------------
 void CityGen::CalcCells()
 {
-
+  _graph.CalcCycles();
 }
 
 //----------------------------------------------------------------------------------
@@ -124,7 +124,6 @@ void CityGen::AddPoint(const vec3& pt)
       // second click, so add an edge
       Vertex* v0 = _graph.FindOrCreateVertex(&_terrain, _dragStart);
       Vertex* v1 = _graph.FindOrCreateVertex(&_terrain, pt);
-
       _graph.AddEdge(v0, v1);
 
       Tri* t0 = _terrain.FindTri(_dragStart);
