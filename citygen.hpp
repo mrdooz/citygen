@@ -1,37 +1,11 @@
 #pragma once
 
-namespace bristol
-{
-  class WindowEventManager;
-  class VirtualWindowManager;
-}
+#include "terrain.hpp"
+#include "graph.hpp"
 
 namespace citygen
 {
   class Arcball;
-
-  struct Tri
-  {
-    vec3 v0, v1, v2;
-    vec3 n;
-  };
-
-  struct Terrain
-  {
-    void CreateMesh();
-    void CalcIntersection(const vec3& org, const vec3& dir);
-    Tri* FindTri(const vec3& v, vec3* out);
-    vector<vec3> _verts;
-    vector<Tri> _tris;
-    vector<u32> _indices;
-    vector<vec3> _intersected;
-    vec3 _minValues, _maxValues;
-    vec3 _intersection;
-    u8* _data = nullptr;
-    int _w, _h, _depth;
-    float _scale = 20.f;
-    float _heightScale = 1.5f;
-  };
 
   struct StepSettings
   {
@@ -55,8 +29,14 @@ namespace citygen
       enum Enum { Done = 1 << 0, Paused = 1 << 1, };
       struct Bits { u32 done : 1; u32 paused : 1; };
     };
-
     typedef Flags<StateFlagsF> StateFlags;
+
+    struct ClickFlagsF
+    {
+      enum Enum { FirstClick = 1 << 0, Dragging = 1 << 1, };
+      struct Bits { u32 firstClick : 1; u32 dragging : 1; };
+    };
+    typedef Flags<ClickFlagsF> ClickFlags;
 
     static void Create();
     static void Destroy();
@@ -79,6 +59,7 @@ namespace citygen
 
     void LoadSettings(const char* filename);
     void SaveSettings(const char* filename);
+    void CalcCells();
 
     static CityGen* _instance;
     string _appRoot;
@@ -104,7 +85,11 @@ namespace citygen
     StepSettings _stepSettings;
     State _state;
 
+    Graph _graph;
+
     string _configFile;
+    ClickFlags _clickFlags;
+    vec3 _dragStart;
   };
 
 #define CITYGEN CityGen::Instance()

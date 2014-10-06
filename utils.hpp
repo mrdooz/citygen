@@ -2,6 +2,12 @@
 
 namespace citygen
 {
+  namespace protocol
+  {
+    class Vector3;
+  }
+
+//----------------------------------------------------------------------------------
   template <typename T>
   bool LoadProto(const char* filename, T* out, bool textFormat = true)
   {
@@ -22,5 +28,9 @@ namespace citygen
       ? google::protobuf::TextFormat::ParseFromString(str, out)
       : out->ParseFromString(str);
   }
+
+  //----------------------------------------------------------------------------------
+  vec3 FromProtocol(const protocol::Vector3& v);
+  void ToProtocol(const vec3& v, protocol::Vector3* out);
 
 }
