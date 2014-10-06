@@ -86,4 +86,12 @@ namespace citygen
     u8* mem;
   };
 
+  //----------------------------------------------------------------------------------
+  template <typename T> typename T::value_type FrontPop(T& cont)
+  {
+    typename T::value_type tmp = cont.front();
+    cont.pop_front();
+    return tmp;
+  }
+
 }

@@ -5,31 +5,30 @@
 using namespace citygen;
 
 //----------------------------------------------------------------------------------
+namespace
+{
+  float MinX(const Edge* e)
+  {
+    return min(e->a->pos.x, e->b->pos.x);
+  }
+}
+
+//----------------------------------------------------------------------------------
 Vertex* Graph::FindOrCreateVertex(Terrain* terrain, const vec3& v)
 {
   Tri* tri = terrain->FindTri(v);
 
   // check for an existing vertex that points to the given triangle
   auto it = triToVerts.find(tri);
-  if (it != triToVerts.end())
+  if (it == triToVerts.end())
   {
-    return it->second;
+    // must create a new vertex. check if we can reuse an index
+    int id = recycledVertexIndices.empty() ? (int)verts.size() : FrontPop(recycledVertexIndices);
+    verts.emplace_back(new Vertex { (tri->v0 + tri->v1 + tri->v2) / 3.f, tri, id });
+    return verts.back();
   }
 
-  // must create a new vertex. check if we can reuse an index
-  int id;
-  if (!recycledIndices.empty())
-  {
-    id = recycledIndices.front();
-    recycledIndices.pop_front();
-  }
-  else
-  {
-    id = (int)verts.size();
-  }
-
-  verts.emplace_back(new Vertex { (tri->v0 + tri->v1 + tri->v2) / 3.f, tri, id });
-  return verts.back();
+  return it->second;
 }
 
 //----------------------------------------------------------------------------------
@@ -40,16 +39,41 @@ void Graph::DeleteVertex(Vertex* vtx)
   int idx = vtx->id;
   delete vtx;
   verts[idx] = nullptr;
-  recycledIndices.push_back(idx);
+  recycledVertexIndices.push_back(idx);
 }
 
 //----------------------------------------------------------------------------------
 void Graph::AddEdge(Vertex* a, Vertex* b)
 {
-  a->edges.push_back(b);
-  b->edges.push_back(a);
+  if (a > b)
+    swap(a, b);
+
+  auto it = vtxPairToEdge.find(make_pair(a->id, b->id));
+  if (it == vtxPairToEdge.end())
+  {
+    // add the edge if it doesn't exist
+    int id = recycledEdgeIndices.empty() ? (int)edges.size() : FrontPop(recycledEdgeIndices);
+    edges.emplace_back(new Edge{a, b, id});
+    a->edges.push_back(id);
+    b->edges.push_back(id);
+  }
+  return;
 }
 
+//----------------------------------------------------------------------------------
+void Graph::DeleteEdge(Edge* edge)
+{
+  int idx = edge->id;
+  Vertex* a = edge->a;
+  Vertex* b = edge->b;
+
+  delete edge;
+  recycledEdgeIndices.push_back(idx);
+
+  // remove the edge from the vertices' edge lists
+  a->edges.erase(remove_if(a->edges.begin(), a->edges.end(), [idx](int id) { return id == idx; }), a->edges.end());
+  b->edges.erase(remove_if(b->edges.begin(), b->edges.end(), [idx](int id) { return id == idx; }), b->edges.end());
+}
 
 //----------------------------------------------------------------------------------
 void Graph::CalcCycles()
@@ -57,20 +81,25 @@ void Graph::CalcCycles()
   if (verts.size() < 3)
     return;
 
-  BitSet visited((u32)verts.size());
+  // Note, we keep track of visited edges, not vertices
+  BitSet visited((u32)edges.size());
+  vector<const Vertex*> parents(verts.size());
+
+  Edge* start = nullptr;
 
   while (true)
   {
-    // start with the left-most unvisited vertex
-    Vertex* start = nullptr;
-    for (size_t i = 0, e = verts.size(); i < e; ++i)
+    // start with the left-most unvisited edge
+    float minX = FLT_MAX;
+    for (Edge* cand : edges)
     {
-      Vertex* cand = verts[0];
       if (visited[cand->id])
         continue;
 
-      if (start == nullptr || cand->pos.x < start->pos.x)
+      float t = MinX(cand);
+      if (t < minX)
       {
+        minX = t;
         start = cand;
       }
     }
@@ -79,35 +108,54 @@ void Graph::CalcCycles()
     if (!start)
       break;
 
-    // start a DFS, traversing all unvisited adjacent verts.
-    BitSet cycleVisited((u32)verts.size());
+    const Vertex* startVtx = start->a;
+
+    // start a DFS, traversing all unvisited edges
+    BitSet cycleVisited((u32)edges.size());
     cycleVisited.Set(start->id);
 
-    // TODO: i've seen some DFS code that differentiates between not visited, in progress and done.. is this
-    // useful?
     deque<const Vertex*> frontier;
-    for (const Vertex* x : start->edges)
+    parents[startVtx->id] = nullptr;
+    for (int edgeIdx : startVtx->edges)
     {
-      cycleVisited.Set(x->id);
-      frontier.push_back(x);
+      // cheese to avoid the back edge
+      if (cycleVisited.IsSet(edgeIdx))
+        continue;
+
+      const Edge* edge = edges[edgeIdx];
+      // add the vertex that we didn't come from..
+      const Vertex* v = edge->a == startVtx ? edge->b : edge->a;
+      frontier.push_back(v);
+      parents[v->id] = startVtx;
     }
 
     while (!frontier.empty())
     {
-      const Vertex* a = frontier.front();
-      frontier.pop_front();
+      const Vertex* a = FrontPop(frontier);
 
-      // if a has an edge to the starting vertex, then we've found a cycle
-      for (const Vertex* x : a->edges)
+      // if a has an unvisited edge to the starting vertex, then we've found a cycle
+      for (int edgeIdx : a->edges)
       {
-        if (x == start)
+        if (cycleVisited[edgeIdx])
+          continue;
+
+        const Edge* edge = edges[edgeIdx];
+        if (edge->a == startVtx || edge->b == startVtx)
         {
           // found cycle
+          // remove all edges from the starting vertex to the first junction as invalid
           int a = 10;
+        }
+        else
+        {
+          // no cycle, so add the next vertex to the frontier
+          const Vertex* v = edge->a == a ? edge->b : edge->a;
+          frontier.push_back(v);
+          parents[v->id] = startVtx;
+          cycleVisited.Set(edge->id);
         }
       }
     }
-
   }
 
 }

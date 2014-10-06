@@ -122,14 +122,11 @@ void CityGen::AddPoint(const vec3& pt)
     else
     {
       // second click, so add an edge
+
+      // create vertices for the points, or get existing ones, if they exist
       Vertex* v0 = _graph.FindOrCreateVertex(&_terrain, _dragStart);
       Vertex* v1 = _graph.FindOrCreateVertex(&_terrain, pt);
       _graph.AddEdge(v0, v1);
-
-      Tri* t0 = _terrain.FindTri(_dragStart);
-      Tri* t1 = _terrain.FindTri(pt);
-
-      // create vertices for the points, or get existing ones, if they exist
 
       _clickFlags.Clear(ClickFlagsF::Dragging);
       _clickFlags.Set(ClickFlagsF::FirstClick);

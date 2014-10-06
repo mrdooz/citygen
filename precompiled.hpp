@@ -73,8 +73,6 @@ namespace citygen
 {
   extern const float PI;
 
-  using std::atomic;
-  using std::condition_variable;
   using std::count_if;
   using std::bind;
   using std::function;
@@ -95,7 +93,8 @@ namespace citygen
   using std::make_shared;
   using std::shared_ptr;
   using std::unique_ptr;
-  using std::thread;
+  using std::swap;
+  using std::remove_if;
 
   using std::function;
 
