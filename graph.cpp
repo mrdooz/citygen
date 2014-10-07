@@ -24,8 +24,10 @@ Vertex* Graph::FindOrCreateVertex(Terrain* terrain, const vec3& v)
   {
     // must create a new vertex. check if we can reuse an index
     int id = recycledVertexIndices.empty() ? (int)verts.size() : FrontPop(recycledVertexIndices);
-    verts.emplace_back(new Vertex { (tri->v0 + tri->v1 + tri->v2) / 3.f, tri, id });
-    return verts.back();
+    Vertex* vtx = new Vertex { (tri->v0 + tri->v1 + tri->v2) / 3.f, tri, id };
+    verts.emplace_back(vtx);
+    triToVerts[tri] = vtx;
+    return vtx;
   }
 
   return it->second;
@@ -45,17 +47,18 @@ void Graph::DeleteVertex(Vertex* vtx)
 //----------------------------------------------------------------------------------
 void Graph::AddEdge(Vertex* a, Vertex* b)
 {
-  if (a > b)
-    swap(a, b);
-
   auto it = vtxPairToEdge.find(make_pair(a->id, b->id));
   if (it == vtxPairToEdge.end())
   {
-    // add the edge if it doesn't exist
-    int id = recycledEdgeIndices.empty() ? (int)edges.size() : FrontPop(recycledEdgeIndices);
-    edges.emplace_back(new Edge{a, b, id});
-    a->edges.push_back(id);
-    b->edges.push_back(id);
+    it = vtxPairToEdge.find(make_pair(b->id, a->id));
+    if (it == vtxPairToEdge.end())
+    {
+      // add the edge if it doesn't exist
+      int id = recycledEdgeIndices.empty() ? (int)edges.size() : FrontPop(recycledEdgeIndices);
+      edges.emplace_back(new Edge{a, b, id});
+      a->edges.push_back(id);
+      b->edges.push_back(id);
+    }
   }
   return;
 }
@@ -144,14 +147,22 @@ void Graph::CalcCycles()
         {
           // found cycle
           // remove all edges from the starting vertex to the first junction as invalid
-          int a = 10;
+          const Vertex* cur = edge->a == startVtx ? edge->b : edge->a;
+          printf("cycle:\n");
+          do
+          {
+            printf("%d, ", cur->id);
+            cur = parents[cur->id];
+          } while (cur);
+
+          return;
         }
         else
         {
           // no cycle, so add the next vertex to the frontier
           const Vertex* v = edge->a == a ? edge->b : edge->a;
           frontier.push_back(v);
-          parents[v->id] = startVtx;
+          parents[v->id] = a;
           cycleVisited.Set(edge->id);
         }
       }

@@ -16,7 +16,6 @@ namespace citygen
 
   struct Edge
   {
-    // note, vertices are stored so a < b
     Vertex* a;
     Vertex* b;
     int id;

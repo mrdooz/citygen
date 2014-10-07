@@ -130,7 +130,10 @@ void CityGen::AddPoint(const vec3& pt)
 
       _clickFlags.Clear(ClickFlagsF::Dragging);
       _clickFlags.Set(ClickFlagsF::FirstClick);
-      _points.push_back(_dragStart);
+
+      // don't add the start point if it's the same as the previous drags point
+      if (_points.empty() || _points.back() != _dragStart)
+        _points.push_back(_dragStart);
       _points.push_back(pt);
       GeneratePrimary();
     }
