@@ -82,7 +82,7 @@ void Graph::DeleteEdge(Edge* edge)
 //----------------------------------------------------------------------------------
 void Graph::DfsCycles()
 {
-  u32 numVerts = verts.size();
+  u32 numVerts = (u32)verts.size();
   for (u32 i = 0; i < numVerts; ++i)
   {
     printf("s: %d\n", i);
@@ -110,6 +110,7 @@ void Graph::Dfs()
 
   for (Vertex* v : verts)
   {
+    printf("v: %d\n", v->id);
     if (v->color == Color::White)
       DfsVisit(v);
   }
@@ -119,26 +120,36 @@ void Graph::Dfs()
 //----------------------------------------------------------------------------------
 void Graph::DfsVisit(Vertex* v)
 {
+  printf("e: %d ", v->id);
   v->color = Color::Gray;
 
   for (Vertex* u : v->adj)
   {
-    if (u->color == Color::White)
+    printf("a: %d ", u->id);
+    switch (u->color)
     {
-      u->parent = v;
-      DfsVisit(u);
-    }
-    else
-    {
-      // back edge found => cycle detected
-      printf("%d ", u->id);
-      Vertex* cur = v;
-      do
+      case Color::White:
       {
-        printf("%d ", cur->id);
-        cur = cur->parent;
-      } while (cur);
-      printf("\n");
+        u->parent = v;
+        DfsVisit(u);
+        break;
+      }
+
+      case Color::Gray:
+      {
+        // back edge found => cycle detected
+        printf("\nc: %d ", u->id);
+        Vertex* cur = v;
+        do
+        {
+          printf("%d ", cur->id);
+          cur = cur->parent;
+        } while (cur);
+        printf("\n");
+        break;
+      }
+
+      default: break;
     }
   }
 
