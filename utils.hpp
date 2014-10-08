@@ -38,14 +38,8 @@ namespace citygen
   {
     BitSet(u32 bits)
       : len(bits/8+1)
-      , mem(new u8[len])
     {
-      memset(mem, 0, len);
-    }
-
-    ~BitSet()
-    {
-      delete[] mem;
+      mem.resize(len);
     }
 
     bool IsSet(u32 ofs) const
@@ -83,7 +77,7 @@ namespace citygen
     }
 
     u32 len;
-    u8* mem;
+    vector<u8> mem;
   };
 
   //----------------------------------------------------------------------------------

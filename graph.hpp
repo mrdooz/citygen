@@ -1,3 +1,5 @@
+#include "utils.hpp"
+
 #pragma once
 
 namespace citygen
@@ -30,6 +32,12 @@ namespace citygen
     int id;
   };
 
+  struct Cycle
+  {
+    vector<const Vertex*> verts;
+    BitSet containsVertex;
+  };
+
   struct Graph
   {
     Vertex* FindOrCreateVertex(Terrain* terrain, const vec3& v);
@@ -46,6 +54,8 @@ namespace citygen
 
     void Dump();
 
+    void CreateCycle(const Vertex* v);
+
     unordered_map<Tri*, Vertex*> triToVerts;
     // TODO: using a map here because unordered_map doen't have hash-combine over pairs..
     map<pair<int, int>, Edge*> vtxPairToEdge;
@@ -56,6 +66,8 @@ namespace citygen
     // are deleted, their slot in @verts is nulled, and their index added to the recycled list.
     deque<int> recycledVertexIndices;
     deque<int> recycledEdgeIndices;
+
+    vector<Cycle> cycles;
   };
 }
 

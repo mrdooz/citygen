@@ -4,12 +4,72 @@
 
 using namespace citygen;
 
+#define DEBUG_OUTPUT 0
+
+#if DEBUG_OUTPUT
+#define DEBUG_PRINT(x) x
+#else
+#define DEBUG_PRINT(x)
+#endif
+
 //----------------------------------------------------------------------------------
-namespace
+void Graph::CreateCycle(const Vertex* v)
 {
-  float MinX(const Edge* e)
+  // Collect all the verts
+  vector<const Vertex*> verts;
+  do
   {
-    return min(e->a->pos.x, e->b->pos.x);
+    verts.push_back(v);
+  } while ((v = v->parent));
+
+  // check if any other cycle contains these verts. if this cycle is smaller,
+  // throw out the larger cycle
+
+  bool addCycle = true;
+
+  for (auto it = cycles.begin(); it != cycles.end(); )
+  {
+    const Cycle& c = *it;
+    bool equal = true;
+
+    // check if another cycle is a subset, or superset, of the candidate cycle
+    size_t vertsToCheck = min(c.verts.size(), verts.size());
+    for (size_t i = 0; i < vertsToCheck; ++i)
+    {
+      const Vertex* v = verts[i];
+      if (!c.containsVertex[v->id])
+      {
+        equal = false;
+        break;
+      }
+    }
+
+    if (!equal)
+    {
+      // the cycles don't overlap, so continue testing the next one..
+      ++it;
+      continue;
+    }
+
+    // the cycles are equal, so check which one to discard
+    if (c.verts.size() > verts.size())
+    {
+      // discard an existing cycle, and (perhaps) replace with the smaller one
+      it = cycles.erase(it);
+      continue;
+    }
+
+    // the candidate is larger, so it's not going to be added..
+    addCycle = false;
+    break;
+  }
+
+  if (addCycle)
+  {
+    cycles.push_back({verts, BitSet(verts.size())});
+    Cycle& c = cycles.back();
+    for (const Vertex* v : verts)
+      c.containsVertex.Set(v->id);
   }
 }
 
@@ -85,7 +145,7 @@ void Graph::DfsCycles()
   u32 numVerts = (u32)verts.size();
   for (u32 i = 0; i < numVerts; ++i)
   {
-    printf("s: %d\n", i);
+    DEBUG_PRINT(printf("s: %d\n", i));
     // reset all the verts
     for (Vertex* v : verts)
     {
@@ -96,6 +156,16 @@ void Graph::DfsCycles()
     Vertex* v = verts[i];
     DfsVisit(v);
   }
+
+  for (const Cycle& c : cycles)
+  {
+    printf("\ncycle: ");
+    for (const Vertex* v : c.verts)
+    {
+      printf("%d ", v->id);
+    }
+  }
+
 }
 
 //----------------------------------------------------------------------------------
@@ -110,22 +180,21 @@ void Graph::Dfs()
 
   for (Vertex* v : verts)
   {
-    printf("v: %d\n", v->id);
+    DEBUG_PRINT(printf("v: %d\n", v->id));
     if (v->color == Color::White)
       DfsVisit(v);
   }
-
 }
 
 //----------------------------------------------------------------------------------
 void Graph::DfsVisit(Vertex* v)
 {
-  printf("e: %d ", v->id);
+  DEBUG_PRINT(printf("e: %d ", v->id));
   v->color = Color::Gray;
 
   for (Vertex* u : v->adj)
   {
-    printf("a: %d ", u->id);
+    DEBUG_PRINT(printf("a: %d ", u->id));
     switch (u->color)
     {
       case Color::White:
@@ -137,15 +206,7 @@ void Graph::DfsVisit(Vertex* v)
 
       case Color::Gray:
       {
-        // back edge found => cycle detected
-        printf("\nc: %d ", u->id);
-        Vertex* cur = v;
-        do
-        {
-          printf("%d ", cur->id);
-          cur = cur->parent;
-        } while (cur);
-        printf("\n");
+        CreateCycle(v);
         break;
       }
 
@@ -159,109 +220,14 @@ void Graph::DfsVisit(Vertex* v)
 //----------------------------------------------------------------------------------
 void Graph::CalcCycles()
 {
-  Dump();
-  //Dfs();
   DfsCycles();
-  return;
-
-  if (verts.size() < 3)
-    return;
-
-  // Note, we keep track of visited edges, not vertices
-  BitSet visited((u32)edges.size());
-  vector<const Vertex*> parents(verts.size());
-
-  Edge* start = nullptr;
-
-  while (true)
-  {
-    // start with the left-most unvisited edge
-    float minX = FLT_MAX;
-    for (Edge* cand : edges)
-    {
-      if (visited[cand->id])
-        continue;
-
-      float t = MinX(cand);
-      if (t < minX)
-      {
-        minX = t;
-        start = cand;
-      }
-    }
-
-    // if no candidates are found, break
-    if (!start)
-      break;
-
-    const Vertex* startVtx = start->a;
-
-    // start a DFS, traversing all unvisited edges
-    BitSet cycleVisited((u32)edges.size());
-    cycleVisited.Set(start->id);
-
-    deque<const Vertex*> frontier;
-    parents[startVtx->id] = nullptr;
-    for (int edgeIdx : startVtx->edges)
-    {
-      // cheese to avoid the back edge
-      if (cycleVisited.IsSet(edgeIdx))
-        continue;
-
-      const Edge* edge = edges[edgeIdx];
-      // add the vertex that we didn't come from..
-      const Vertex* v = edge->a == startVtx ? edge->b : edge->a;
-      frontier.push_back(v);
-      parents[v->id] = startVtx;
-    }
-
-    while (!frontier.empty())
-    {
-      const Vertex* a = FrontPop(frontier);
-      printf("f: %d\n", a->id);
-
-      // if a has an unvisited edge to the starting vertex, then we've found a cycle
-      for (int edgeIdx : a->edges)
-      {
-        printf("e: %d (%s)\n", edgeIdx, cycleVisited[edgeIdx] ? "visited" : "not_visited");
-
-        if (cycleVisited[edgeIdx])
-          continue;
-
-        const Edge* edge = edges[edgeIdx];
-        if (edge->a == startVtx || edge->b == startVtx)
-        {
-          // found cycle
-          // remove all edges from the starting vertex to the first junction as invalid
-          const Vertex* cur = edge->a == startVtx ? edge->b : edge->a;
-          printf("cycle:\n");
-          do
-          {
-            printf("%d, ", cur->id);
-            cur = parents[cur->id];
-          } while (cur);
-
-          return;
-        }
-        else
-        {
-          // no cycle, so add the next vertex to the frontier
-          const Vertex* v = edge->a == a ? edge->b : edge->a;
-          frontier.push_back(v);
-          parents[v->id] = a;
-          cycleVisited.Set(edge->id);
-        }
-      }
-    }
-  }
-
 }
 
 
 //----------------------------------------------------------------------------------
 void Graph::Dump()
 {
-  printf("num_verts: %d\n", verts.size());
+  printf("num_verts: %d\n", (int)verts.size());
   for (const Vertex* v : verts)
   {
     printf("v: %d\n  ", v->id);
@@ -272,7 +238,7 @@ void Graph::Dump()
     printf("\n");
   }
 
-  printf("\nnum_edges: %d\n", edges.size());
+  printf("\nnum_edges: %d\n", (int)edges.size());
   for (const Edge* e : edges)
   {
     printf("e: %d, a: %d, d: %d\n", e->id, e->a->id, e->b->id);
