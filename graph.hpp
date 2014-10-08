@@ -53,6 +53,7 @@ namespace citygen
     void DfsVisit(Vertex* v);
 
     void Dump();
+    void Reset();
 
     void CreateCycle(const Vertex* v);
 

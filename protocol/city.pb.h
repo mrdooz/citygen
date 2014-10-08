@@ -402,17 +402,17 @@ class City : public ::google::protobuf::Message {
   inline ::citygen::protocol::Settings* release_settings();
   inline void set_allocated_settings(::citygen::protocol::Settings* settings);
 
-  // repeated .citygen.protocol.Vector3 primary_nodes = 2;
-  inline int primary_nodes_size() const;
-  inline void clear_primary_nodes();
-  static const int kPrimaryNodesFieldNumber = 2;
-  inline const ::citygen::protocol::Vector3& primary_nodes(int index) const;
-  inline ::citygen::protocol::Vector3* mutable_primary_nodes(int index);
-  inline ::citygen::protocol::Vector3* add_primary_nodes();
+  // repeated .citygen.protocol.Vector3 nodes = 2;
+  inline int nodes_size() const;
+  inline void clear_nodes();
+  static const int kNodesFieldNumber = 2;
+  inline const ::citygen::protocol::Vector3& nodes(int index) const;
+  inline ::citygen::protocol::Vector3* mutable_nodes(int index);
+  inline ::citygen::protocol::Vector3* add_nodes();
   inline const ::google::protobuf::RepeatedPtrField< ::citygen::protocol::Vector3 >&
-      primary_nodes() const;
+      nodes() const;
   inline ::google::protobuf::RepeatedPtrField< ::citygen::protocol::Vector3 >*
-      mutable_primary_nodes();
+      mutable_nodes();
 
   // @@protoc_insertion_point(class_scope:citygen.protocol.City)
  private:
@@ -422,7 +422,7 @@ class City : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::citygen::protocol::Settings* settings_;
-  ::google::protobuf::RepeatedPtrField< ::citygen::protocol::Vector3 > primary_nodes_;
+  ::google::protobuf::RepeatedPtrField< ::citygen::protocol::Vector3 > nodes_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
@@ -683,29 +683,29 @@ inline void City::set_allocated_settings(::citygen::protocol::Settings* settings
   }
 }
 
-// repeated .citygen.protocol.Vector3 primary_nodes = 2;
-inline int City::primary_nodes_size() const {
-  return primary_nodes_.size();
+// repeated .citygen.protocol.Vector3 nodes = 2;
+inline int City::nodes_size() const {
+  return nodes_.size();
 }
-inline void City::clear_primary_nodes() {
-  primary_nodes_.Clear();
+inline void City::clear_nodes() {
+  nodes_.Clear();
 }
-inline const ::citygen::protocol::Vector3& City::primary_nodes(int index) const {
-  return primary_nodes_.Get(index);
+inline const ::citygen::protocol::Vector3& City::nodes(int index) const {
+  return nodes_.Get(index);
 }
-inline ::citygen::protocol::Vector3* City::mutable_primary_nodes(int index) {
-  return primary_nodes_.Mutable(index);
+inline ::citygen::protocol::Vector3* City::mutable_nodes(int index) {
+  return nodes_.Mutable(index);
 }
-inline ::citygen::protocol::Vector3* City::add_primary_nodes() {
-  return primary_nodes_.Add();
+inline ::citygen::protocol::Vector3* City::add_nodes() {
+  return nodes_.Add();
 }
 inline const ::google::protobuf::RepeatedPtrField< ::citygen::protocol::Vector3 >&
-City::primary_nodes() const {
-  return primary_nodes_;
+City::nodes() const {
+  return nodes_;
 }
 inline ::google::protobuf::RepeatedPtrField< ::citygen::protocol::Vector3 >*
-City::mutable_primary_nodes() {
-  return &primary_nodes_;
+City::mutable_nodes() {
+  return &nodes_;
 }
 
 

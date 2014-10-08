@@ -72,7 +72,7 @@ namespace citygen
     FileWatcher _fileWatcher;
     Arcball* _arcball;
 
-    vector<vec3> _points;
+    vector<vec3> _nodes;
     vector<vec3> _primary;
 
     bool _drawDebugLines;

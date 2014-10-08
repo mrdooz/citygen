@@ -80,10 +80,9 @@ bool CityGen::Init()
 
   _configFile = base + "config/city1.pb";
   _terrain._data = stbi_load((base + "noise.tga").c_str(), &_terrain._w, &_terrain._h, &_terrain._depth, 0);
+  _terrain.CreateMesh();
 
   LoadSettings(_configFile.c_str());
-
-  _terrain.CreateMesh();
 
   InitGL();
   InitImGui();
@@ -132,10 +131,11 @@ void CityGen::AddPoint(const vec3& pt)
       {
         _graph.AddEdge(v0, v1);
 
+        // IMPORTANT: we save the snapped coords from the vertex, and not the actual input points
         // don't add the start point if it's the same as the previous drags point
-        if (_points.empty() || _points.back() != _dragStart)
-          _points.push_back(_dragStart);
-        _points.push_back(pt);
+        if (_nodes.empty() || _nodes.back() != v0->pos)
+          _nodes.push_back(v0->pos);
+        _nodes.push_back(v1->pos);
         GeneratePrimary();
       }
       _clickFlags.Clear(ClickFlagsF::Dragging);
@@ -195,7 +195,7 @@ struct Stepper
 //----------------------------------------------------------------------------------
 void CityGen::GeneratePrimary()
 {
-  if (_points.size() < 2)
+  if (_nodes.size() < 2)
     return;
 
   _primary.clear();
@@ -204,13 +204,13 @@ void CityGen::GeneratePrimary()
   deque<vec3> backward;
   vector<vec3> forward;
 
-  for (int curIdx = 0; curIdx < _points.size() - 1; ++curIdx)
+  for (int curIdx = 0; curIdx < _nodes.size() - 1; ++curIdx)
   {
     backward.clear();
     forward.clear();
 
-    vec3 cur(_points[curIdx+0]);
-    vec3 end(_points[curIdx+1]);
+    vec3 cur(_nodes[curIdx+0]);
+    vec3 end(_nodes[curIdx+1]);
 
     // make 2 steppers, one for each direction
     Stepper forwardStepper(&_terrain, &_stepSettings, cur, end);
@@ -415,13 +415,25 @@ void CityGen::LoadSettings(const char* filename)
   _stepSettings.deviation             = stepSettings.deviation();
   _stepSettings.roadHeight            = stepSettings.road_height();
 
-  // load primary
-  _primary.clear();
-  _primary.reserve(city.primary_nodes_size());
-  for (const protocol::Vector3& v : city.primary_nodes())
+  // load nodes
+  _nodes.clear();
+  _nodes.reserve(city.nodes_size());
+  for (const protocol::Vector3& v : city.nodes())
   {
-    _primary.push_back(FromProtocol(v));
+    _nodes.push_back(FromProtocol(v));
   }
+
+  _graph.Reset();
+
+  // create the graph, and create the primary nodes
+  for (size_t i = 0; i < _nodes.size() - 1; ++i)
+  {
+    Vertex* v0 = _graph.FindOrCreateVertex(&_terrain, _nodes[i+0]);
+    Vertex* v1 = _graph.FindOrCreateVertex(&_terrain, _nodes[i+1]);
+    _graph.AddEdge(v0, v1);
+  }
+  GeneratePrimary();
+
 }
 
 //----------------------------------------------------------------------------------
@@ -436,9 +448,9 @@ void CityGen::SaveSettings(const char* filename)
   stepSettings->set_deviation(_stepSettings.deviation);
   stepSettings->set_road_height(_stepSettings.roadHeight);
 
-  for (const vec3& v : _primary)
+  for (const vec3& v : _nodes)
   {
-    ToProtocol(v, city.add_primary_nodes());
+    ToProtocol(v, city.add_nodes());
   }
 
   string str = city.DebugString();

@@ -96,7 +96,7 @@ void protobuf_AssignDesc_city_2eproto() {
   City_descriptor_ = file->message_type(3);
   static const int City_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(City, settings_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(City, primary_nodes_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(City, nodes_),
   };
   City_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -157,10 +157,9 @@ void protobuf_AddDesc_city_2eproto() {
     "step_size\030\002 \001(\002:\0030.5\022\031\n\tdeviation\030\003 \001(\002:"
     "\0060.7854\022\026\n\013road_height\030\004 \001(\002:\0015\"A\n\010Setti"
     "ngs\0225\n\rstep_settings\030\001 \001(\0132\036.citygen.pro"
-    "tocol.StepSettings\"f\n\004City\022,\n\010settings\030\001"
-    " \001(\0132\032.citygen.protocol.Settings\0220\n\rprim"
-    "ary_nodes\030\002 \003(\0132\031.citygen.protocol.Vecto"
-    "r3", 362);
+    "tocol.StepSettings\"^\n\004City\022,\n\010settings\030\001"
+    " \001(\0132\032.citygen.protocol.Settings\022(\n\005node"
+    "s\030\002 \003(\0132\031.citygen.protocol.Vector3", 354);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "city.proto", &protobuf_RegisterTypes);
   Vector3::default_instance_ = new Vector3();
@@ -1002,7 +1001,7 @@ void Settings::Swap(Settings* other) {
 
 #ifndef _MSC_VER
 const int City::kSettingsFieldNumber;
-const int City::kPrimaryNodesFieldNumber;
+const int City::kNodesFieldNumber;
 #endif  // !_MSC_VER
 
 City::City()
@@ -1063,7 +1062,7 @@ void City::Clear() {
       if (settings_ != NULL) settings_->::citygen::protocol::Settings::Clear();
     }
   }
-  primary_nodes_.Clear();
+  nodes_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -1083,21 +1082,21 @@ bool City::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(18)) goto parse_primary_nodes;
+        if (input->ExpectTag(18)) goto parse_nodes;
         break;
       }
 
-      // repeated .citygen.protocol.Vector3 primary_nodes = 2;
+      // repeated .citygen.protocol.Vector3 nodes = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_primary_nodes:
+         parse_nodes:
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-                input, add_primary_nodes()));
+                input, add_nodes()));
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(18)) goto parse_primary_nodes;
+        if (input->ExpectTag(18)) goto parse_nodes;
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -1126,10 +1125,10 @@ void City::SerializeWithCachedSizes(
       1, this->settings(), output);
   }
 
-  // repeated .citygen.protocol.Vector3 primary_nodes = 2;
-  for (int i = 0; i < this->primary_nodes_size(); i++) {
+  // repeated .citygen.protocol.Vector3 nodes = 2;
+  for (int i = 0; i < this->nodes_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      2, this->primary_nodes(i), output);
+      2, this->nodes(i), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -1147,11 +1146,11 @@ void City::SerializeWithCachedSizes(
         1, this->settings(), target);
   }
 
-  // repeated .citygen.protocol.Vector3 primary_nodes = 2;
-  for (int i = 0; i < this->primary_nodes_size(); i++) {
+  // repeated .citygen.protocol.Vector3 nodes = 2;
+  for (int i = 0; i < this->nodes_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
-        2, this->primary_nodes(i), target);
+        2, this->nodes(i), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1173,12 +1172,12 @@ int City::ByteSize() const {
     }
 
   }
-  // repeated .citygen.protocol.Vector3 primary_nodes = 2;
-  total_size += 1 * this->primary_nodes_size();
-  for (int i = 0; i < this->primary_nodes_size(); i++) {
+  // repeated .citygen.protocol.Vector3 nodes = 2;
+  total_size += 1 * this->nodes_size();
+  for (int i = 0; i < this->nodes_size(); i++) {
     total_size +=
       ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-        this->primary_nodes(i));
+        this->nodes(i));
   }
 
   if (!unknown_fields().empty()) {
@@ -1206,7 +1205,7 @@ void City::MergeFrom(const ::google::protobuf::Message& from) {
 
 void City::MergeFrom(const City& from) {
   GOOGLE_CHECK_NE(&from, this);
-  primary_nodes_.MergeFrom(from.primary_nodes_);
+  nodes_.MergeFrom(from.nodes_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_settings()) {
       mutable_settings()->::citygen::protocol::Settings::MergeFrom(from.settings());
@@ -1235,7 +1234,7 @@ bool City::IsInitialized() const {
 void City::Swap(City* other) {
   if (other != this) {
     std::swap(settings_, other->settings_);
-    primary_nodes_.Swap(&other->primary_nodes_);
+    nodes_.Swap(&other->nodes_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

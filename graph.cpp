@@ -244,3 +244,22 @@ void Graph::Dump()
     printf("e: %d, a: %d, d: %d\n", e->id, e->a->id, e->b->id);
   }
 }
+
+//----------------------------------------------------------------------------------
+void Graph::Reset()
+{
+  triToVerts.clear();
+  vtxPairToEdge.clear();
+
+  for (Vertex* v : verts)
+    delete v;
+  verts.clear();
+
+  for (Edge* e : edges)
+    delete e;
+  edges.clear();
+
+  recycledVertexIndices.clear();
+  recycledEdgeIndices.clear();
+  cycles.clear();
+}
