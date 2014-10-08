@@ -6,12 +6,21 @@ namespace citygen
   struct Tri;
   struct Terrain;
 
+  enum class Color {
+    White,
+    Gray,
+    Black,
+  };
+
   struct Vertex
   {
     vec3 pos;
     Tri* tri;
     int id;
     vector<int> edges;
+    vector<Vertex*> adj;
+    Vertex* parent;
+    Color color;
   };
 
   struct Edge
@@ -30,6 +39,12 @@ namespace citygen
     void DeleteEdge(Edge* edge);
 
     void CalcCycles();
+
+    void DfsCycles();
+    void Dfs();
+    void DfsVisit(Vertex* v);
+
+    void Dump();
 
     unordered_map<Tri*, Vertex*> triToVerts;
     // TODO: using a map here because unordered_map doen't have hash-combine over pairs..

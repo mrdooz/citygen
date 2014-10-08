@@ -126,16 +126,20 @@ void CityGen::AddPoint(const vec3& pt)
       // create vertices for the points, or get existing ones, if they exist
       Vertex* v0 = _graph.FindOrCreateVertex(&_terrain, _dragStart);
       Vertex* v1 = _graph.FindOrCreateVertex(&_terrain, pt);
-      _graph.AddEdge(v0, v1);
 
+      // only add non-degenerate edges
+      if (v0 != v1)
+      {
+        _graph.AddEdge(v0, v1);
+
+        // don't add the start point if it's the same as the previous drags point
+        if (_points.empty() || _points.back() != _dragStart)
+          _points.push_back(_dragStart);
+        _points.push_back(pt);
+        GeneratePrimary();
+      }
       _clickFlags.Clear(ClickFlagsF::Dragging);
       _clickFlags.Set(ClickFlagsF::FirstClick);
-
-      // don't add the start point if it's the same as the previous drags point
-      if (_points.empty() || _points.back() != _dragStart)
-        _points.push_back(_dragStart);
-      _points.push_back(pt);
-      GeneratePrimary();
     }
   }
 }

@@ -58,9 +58,10 @@ void Graph::AddEdge(Vertex* a, Vertex* b)
       edges.emplace_back(new Edge{a, b, id});
       a->edges.push_back(id);
       b->edges.push_back(id);
+      a->adj.push_back(b);
+//      b->adj.push_back(a);
     }
   }
-  return;
 }
 
 //----------------------------------------------------------------------------------
@@ -79,8 +80,79 @@ void Graph::DeleteEdge(Edge* edge)
 }
 
 //----------------------------------------------------------------------------------
+void Graph::DfsCycles()
+{
+  u32 numVerts = verts.size();
+  for (u32 i = 0; i < numVerts; ++i)
+  {
+    printf("s: %d\n", i);
+    // reset all the verts
+    for (Vertex* v : verts)
+    {
+      v->color = Color::White;
+      v->parent = nullptr;
+    }
+
+    Vertex* v = verts[i];
+    DfsVisit(v);
+  }
+}
+
+//----------------------------------------------------------------------------------
+void Graph::Dfs()
+{
+  // init verts to white
+  for (Vertex* v : verts)
+  {
+    v->color = Color::White;
+    v->parent = nullptr;
+  }
+
+  for (Vertex* v : verts)
+  {
+    if (v->color == Color::White)
+      DfsVisit(v);
+  }
+
+}
+
+//----------------------------------------------------------------------------------
+void Graph::DfsVisit(Vertex* v)
+{
+  v->color = Color::Gray;
+
+  for (Vertex* u : v->adj)
+  {
+    if (u->color == Color::White)
+    {
+      u->parent = v;
+      DfsVisit(u);
+    }
+    else
+    {
+      // back edge found => cycle detected
+      printf("%d ", u->id);
+      Vertex* cur = v;
+      do
+      {
+        printf("%d ", cur->id);
+        cur = cur->parent;
+      } while (cur);
+      printf("\n");
+    }
+  }
+
+  v->color = Color::Black;
+}
+
+//----------------------------------------------------------------------------------
 void Graph::CalcCycles()
 {
+  Dump();
+  //Dfs();
+  DfsCycles();
+  return;
+
   if (verts.size() < 3)
     return;
 
@@ -135,10 +207,13 @@ void Graph::CalcCycles()
     while (!frontier.empty())
     {
       const Vertex* a = FrontPop(frontier);
+      printf("f: %d\n", a->id);
 
       // if a has an unvisited edge to the starting vertex, then we've found a cycle
       for (int edgeIdx : a->edges)
       {
+        printf("e: %d (%s)\n", edgeIdx, cycleVisited[edgeIdx] ? "visited" : "not_visited");
+
         if (cycleVisited[edgeIdx])
           continue;
 
@@ -169,4 +244,26 @@ void Graph::CalcCycles()
     }
   }
 
+}
+
+
+//----------------------------------------------------------------------------------
+void Graph::Dump()
+{
+  printf("num_verts: %d\n", verts.size());
+  for (const Vertex* v : verts)
+  {
+    printf("v: %d\n  ", v->id);
+    for (Vertex* u : v->adj)
+      printf("a: %d ", u->id);
+//    for (int edge : v->edges)
+//      printf("e: %d ", edge);
+    printf("\n");
+  }
+
+  printf("\nnum_edges: %d\n", edges.size());
+  for (const Edge* e : edges)
+  {
+    printf("e: %d, a: %d, d: %d\n", e->id, e->a->id, e->b->id);
+  }
 }
