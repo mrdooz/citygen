@@ -144,6 +144,82 @@ void CityGen::Update()
   UpdateImGui();
 }
 
+struct SecVertex
+{
+  vec3 pos;
+//  SecVertex* parent = nullptr;
+//  vector<SecVertex*> adj;
+};
+
+struct SecEdge
+{
+  SecVertex* a;
+  SecVertex* b;
+  vec3 dir;
+  float len;
+};
+
+struct SecNode
+{
+
+};
+
+SecNode* InsertNode(SecEdge* edge, const vec3& v)
+{
+  return new SecNode();
+}
+
+//----------------------------------------------------------------------------------
+void CityGen::CalcSecondary(const Cycle& cycle)
+{
+  const vector<const Vertex*>& cverts = cycle.verts;
+  if (cverts.size() < 2)
+    return;
+
+  vector<SecEdge*> edges(cverts.size());
+  vector<SecVertex*> verts(cverts.size());
+
+  // create verts and edges
+  for (size_t i = 0; i < cverts.size(); ++i)
+  {
+    const Vertex* cv = cverts[i];
+    verts[i] = new SecVertex{cv->pos};
+  }
+
+  for (size_t i = 0; i < cverts.size(); ++i)
+  {
+    SecVertex* a  = verts[i];
+    SecVertex* b  = verts[(i+1) % verts.size()];
+    edges[i]      = new SecEdge{a, b, normalize(b->pos - a->pos), distance(a->pos, b->pos)};
+  }
+
+  // sort edges by length
+  sort(edges.begin(), edges.end(), [](const SecEdge* lhs, const SecEdge* rhs) { return lhs->len > rhs->len; });
+
+  // calc initial road segments
+  for (size_t i = 0; i < edges.size(); ++i)
+  {
+    SecEdge* edge = edges[i];
+    SecVertex* a  = edge->a;
+    SecVertex* b  = edge->b;
+
+    // calc deviated midpoint
+    vec3 pt = lerp(a->pos, b->pos, GaussianRand(0.5f, 0.1f));
+//    vec3 pt = lerp(a->pos, b->pos, 0.5f);
+    Tri* tri = _terrain.FindTri(pt, &pt);
+
+    SecNode* sourceNode = InsertNode(edge, pt);
+
+    // calc road dir
+    // this should lie in the arc in the plane described by the current triangle normal and the edge
+    vec3 dir = cross(tri->n, edge->dir);
+//    vec3 dir = cross(edge->dir, tri->n);
+    _debugLines.push_back(pt);
+    _debugLines.push_back(pt + 10.f * dir);
+  }
+
+}
+
 #if 0
 // calculate initial road segments
 for each boundaryRoad in longest(boundaryRoads)
@@ -200,22 +276,6 @@ void CityGen::CalcCells()
   {
     CalcSecondary(cycle);
   }
-}
-
-struct SecEdge
-{
-
-};
-
-struct SecNode
-{
-  SecNode* parent = nullptr;
-};
-
-//----------------------------------------------------------------------------------
-void CityGen::CalcSecondary(const Cycle& cycle)
-{
-
 }
 
 //----------------------------------------------------------------------------------

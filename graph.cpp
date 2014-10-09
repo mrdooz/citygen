@@ -62,6 +62,8 @@ void Graph::CreateCycle(const Vertex* v)
     for (const Vertex* v : verts)
       c.containsVertex.Set(v->id);
   }
+
+  // TODO: make sure the cycle has a consistent winding order
 }
 
 //----------------------------------------------------------------------------------
