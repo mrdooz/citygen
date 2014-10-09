@@ -10,6 +10,50 @@ using namespace citygen;
 CityGen* CityGen::_instance;
 
 //----------------------------------------------------------------------------------
+void SecondaryParameterSet::ToProtocol(protocol::SecondaryParameterSet* proto) const
+{
+  proto->set_cell_id(cellId);
+  proto->set_segment_size(segmentSize);
+  proto->set_segment_size_deviation(segmentSizeDeviation);
+  proto->set_degree(degree);
+  proto->set_degree_deviation(degreeDeviation);
+  proto->set_snap_size(snapSize);
+  proto->set_snap_size_deviation(snapSizeDeviation);
+  proto->set_connectivity(connectivity);
+}
+
+//----------------------------------------------------------------------------------
+void SecondaryParameterSet::FromProtocol(const protocol::SecondaryParameterSet& proto)
+{
+  cellId                = proto.cell_id();
+  segmentSize           = proto.segment_size();
+  segmentSizeDeviation  = proto.segment_size_deviation();
+  degree                = proto.degree();
+  degreeDeviation       = proto.degree_deviation();
+  snapSize              = proto.snap_size();
+  snapSizeDeviation     = proto.snap_size_deviation();
+  connectivity          = proto.connectivity();
+}
+
+//----------------------------------------------------------------------------------
+void StepSettings::ToProtocol(protocol::StepSettings* proto) const
+{
+  proto->set_num_segments(numSegments);
+  proto->set_step_size(stepSize);
+  proto->set_deviation(deviation);
+  proto->set_road_height(roadHeight);
+}
+
+//----------------------------------------------------------------------------------
+void StepSettings::FromProtocol(const protocol::StepSettings& proto)
+{
+  numSegments = proto.num_segments();
+  stepSize    = proto.step_size();
+  deviation   = proto.deviation();
+  roadHeight  = proto.road_height();
+}
+
+//----------------------------------------------------------------------------------
 CityGen::CityGen()
     : _arcball(nullptr)
     , _drawDebugLines(true)
@@ -103,7 +147,19 @@ void CityGen::Update()
 //----------------------------------------------------------------------------------
 void CityGen::CalcCells()
 {
-  _graph.CalcCycles();
+  vector<Cycle> cycles;
+  _graph.CalcCycles(&cycles);
+
+  CalcSecondary(cycles);
+}
+
+//----------------------------------------------------------------------------------
+void CityGen::CalcSecondary(const vector<Cycle>& cycles)
+{
+  for (const Cycle& cycle : cycles)
+  {
+
+  }
 }
 
 //----------------------------------------------------------------------------------
@@ -171,7 +227,7 @@ struct Stepper
     {
       vec3 pt = cur + settings->stepSize * vec3(cosf(a), 0, sinf(a));
 
-      Tri* tri = terrain->FindTri(pt, &pt);
+      terrain->FindTri(pt, &pt);
       float tmp = length(goal - pt);
       if (tmp < closest)
       {
@@ -407,13 +463,14 @@ void CityGen::LoadSettings(const char* filename)
     return;
 
   // load settings
-  protocol::Settings settings         = city.settings();
-  protocol::StepSettings stepSettings = settings.step_settings();
+  protocol::Settings settings = city.settings();
+  _stepSettings.FromProtocol(settings.step_settings());
 
-  _stepSettings.numSegments           = stepSettings.num_segments();
-  _stepSettings.stepSize              = stepSettings.step_size();
-  _stepSettings.deviation             = stepSettings.deviation();
-  _stepSettings.roadHeight            = stepSettings.road_height();
+  for (const auto& ps : settings.parameter_set())
+  {
+    _parameterSet.push_back(SecondaryParameterSet());
+    _parameterSet.back().FromProtocol(ps);
+  }
 
   // load nodes
   _nodes.clear();
@@ -441,12 +498,10 @@ void CityGen::SaveSettings(const char* filename)
 {
   protocol::City city;
   protocol::Settings* settings = city.mutable_settings();
-  protocol::StepSettings* stepSettings = settings->mutable_step_settings();
+  _stepSettings.ToProtocol(settings->mutable_step_settings());
 
-  stepSettings->set_num_segments(_stepSettings.numSegments);
-  stepSettings->set_step_size(_stepSettings.stepSize);
-  stepSettings->set_deviation(_stepSettings.deviation);
-  stepSettings->set_road_height(_stepSettings.roadHeight);
+  for (const auto& ps : _parameterSet)
+    ps.ToProtocol(settings->add_parameter_set());
 
   for (const vec3& v : _nodes)
   {

@@ -7,6 +7,18 @@ message Vector3
   optional float z = 3;
 }
 
+message SecondaryParameterSet
+{
+  optional int32 cell_id                    = 1;
+  optional float segment_size               = 2 [default = 10];
+  optional float segment_size_deviation     = 3 [default = 0.5];
+  optional int32 degree                     = 4 [default = 2];
+  optional float degree_deviation           = 5 [default = 0.5];
+  optional float snap_size                  = 6 [default = 20];
+  optional float snap_size_deviation        = 7 [default = 0.5];
+  optional float connectivity               = 8 [default = 0.3];
+}
+
 message StepSettings
 {
   optional int32 num_segments = 1 [default = 20];
@@ -19,6 +31,7 @@ message StepSettings
 message Settings
 {
   optional StepSettings step_settings = 1;
+  repeated SecondaryParameterSet parameter_set = 2;
 }
 
 message City

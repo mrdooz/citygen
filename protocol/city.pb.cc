@@ -24,6 +24,9 @@ namespace {
 const ::google::protobuf::Descriptor* Vector3_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   Vector3_reflection_ = NULL;
+const ::google::protobuf::Descriptor* SecondaryParameterSet_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  SecondaryParameterSet_reflection_ = NULL;
 const ::google::protobuf::Descriptor* StepSettings_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   StepSettings_reflection_ = NULL;
@@ -60,7 +63,29 @@ void protobuf_AssignDesc_city_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Vector3));
-  StepSettings_descriptor_ = file->message_type(1);
+  SecondaryParameterSet_descriptor_ = file->message_type(1);
+  static const int SecondaryParameterSet_offsets_[8] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SecondaryParameterSet, cell_id_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SecondaryParameterSet, segment_size_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SecondaryParameterSet, segment_size_deviation_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SecondaryParameterSet, degree_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SecondaryParameterSet, degree_deviation_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SecondaryParameterSet, snap_size_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SecondaryParameterSet, snap_size_deviation_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SecondaryParameterSet, connectivity_),
+  };
+  SecondaryParameterSet_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      SecondaryParameterSet_descriptor_,
+      SecondaryParameterSet::default_instance_,
+      SecondaryParameterSet_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SecondaryParameterSet, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(SecondaryParameterSet, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(SecondaryParameterSet));
+  StepSettings_descriptor_ = file->message_type(2);
   static const int StepSettings_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StepSettings, num_segments_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(StepSettings, step_size_),
@@ -78,9 +103,10 @@ void protobuf_AssignDesc_city_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(StepSettings));
-  Settings_descriptor_ = file->message_type(2);
-  static const int Settings_offsets_[1] = {
+  Settings_descriptor_ = file->message_type(3);
+  static const int Settings_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Settings, step_settings_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Settings, parameter_set_),
   };
   Settings_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -93,7 +119,7 @@ void protobuf_AssignDesc_city_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Settings));
-  City_descriptor_ = file->message_type(3);
+  City_descriptor_ = file->message_type(4);
   static const int City_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(City, settings_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(City, nodes_),
@@ -124,6 +150,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Vector3_descriptor_, &Vector3::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    SecondaryParameterSet_descriptor_, &SecondaryParameterSet::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     StepSettings_descriptor_, &StepSettings::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Settings_descriptor_, &Settings::default_instance());
@@ -136,6 +164,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void protobuf_ShutdownFile_city_2eproto() {
   delete Vector3::default_instance_;
   delete Vector3_reflection_;
+  delete SecondaryParameterSet::default_instance_;
+  delete SecondaryParameterSet_reflection_;
   delete StepSettings::default_instance_;
   delete StepSettings_reflection_;
   delete Settings::default_instance_;
@@ -152,21 +182,31 @@ void protobuf_AddDesc_city_2eproto() {
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\ncity.proto\022\020citygen.protocol\"*\n\007Vector"
-    "3\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\"s\n\014St"
+    "3\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\"\355\001\n\025S"
+    "econdaryParameterSet\022\017\n\007cell_id\030\001 \001(\005\022\030\n"
+    "\014segment_size\030\002 \001(\002:\00210\022#\n\026segment_size_"
+    "deviation\030\003 \001(\002:\0030.5\022\021\n\006degree\030\004 \001(\005:\0012\022"
+    "\035\n\020degree_deviation\030\005 \001(\002:\0030.5\022\025\n\tsnap_s"
+    "ize\030\006 \001(\002:\00220\022 \n\023snap_size_deviation\030\007 \001"
+    "(\002:\0030.5\022\031\n\014connectivity\030\010 \001(\002:\0030.3\"s\n\014St"
     "epSettings\022\030\n\014num_segments\030\001 \001(\005:\00220\022\026\n\t"
     "step_size\030\002 \001(\002:\0030.5\022\031\n\tdeviation\030\003 \001(\002:"
-    "\0060.7854\022\026\n\013road_height\030\004 \001(\002:\0015\"A\n\010Setti"
-    "ngs\0225\n\rstep_settings\030\001 \001(\0132\036.citygen.pro"
-    "tocol.StepSettings\"^\n\004City\022,\n\010settings\030\001"
-    " \001(\0132\032.citygen.protocol.Settings\022(\n\005node"
-    "s\030\002 \003(\0132\031.citygen.protocol.Vector3", 354);
+    "\0060.7854\022\026\n\013road_height\030\004 \001(\002:\0015\"\201\001\n\010Sett"
+    "ings\0225\n\rstep_settings\030\001 \001(\0132\036.citygen.pr"
+    "otocol.StepSettings\022>\n\rparameter_set\030\002 \003"
+    "(\0132\'.citygen.protocol.SecondaryParameter"
+    "Set\"^\n\004City\022,\n\010settings\030\001 \001(\0132\032.citygen."
+    "protocol.Settings\022(\n\005nodes\030\002 \003(\0132\031.cityg"
+    "en.protocol.Vector3", 659);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "city.proto", &protobuf_RegisterTypes);
   Vector3::default_instance_ = new Vector3();
+  SecondaryParameterSet::default_instance_ = new SecondaryParameterSet();
   StepSettings::default_instance_ = new StepSettings();
   Settings::default_instance_ = new Settings();
   City::default_instance_ = new City();
   Vector3::default_instance_->InitAsDefaultInstance();
+  SecondaryParameterSet::default_instance_->InitAsDefaultInstance();
   StepSettings::default_instance_->InitAsDefaultInstance();
   Settings::default_instance_->InitAsDefaultInstance();
   City::default_instance_->InitAsDefaultInstance();
@@ -458,6 +498,482 @@ void Vector3::Swap(Vector3* other) {
   ::google::protobuf::Metadata metadata;
   metadata.descriptor = Vector3_descriptor_;
   metadata.reflection = Vector3_reflection_;
+  return metadata;
+}
+
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int SecondaryParameterSet::kCellIdFieldNumber;
+const int SecondaryParameterSet::kSegmentSizeFieldNumber;
+const int SecondaryParameterSet::kSegmentSizeDeviationFieldNumber;
+const int SecondaryParameterSet::kDegreeFieldNumber;
+const int SecondaryParameterSet::kDegreeDeviationFieldNumber;
+const int SecondaryParameterSet::kSnapSizeFieldNumber;
+const int SecondaryParameterSet::kSnapSizeDeviationFieldNumber;
+const int SecondaryParameterSet::kConnectivityFieldNumber;
+#endif  // !_MSC_VER
+
+SecondaryParameterSet::SecondaryParameterSet()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void SecondaryParameterSet::InitAsDefaultInstance() {
+}
+
+SecondaryParameterSet::SecondaryParameterSet(const SecondaryParameterSet& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void SecondaryParameterSet::SharedCtor() {
+  _cached_size_ = 0;
+  cell_id_ = 0;
+  segment_size_ = 10;
+  segment_size_deviation_ = 0.5f;
+  degree_ = 2;
+  degree_deviation_ = 0.5f;
+  snap_size_ = 20;
+  snap_size_deviation_ = 0.5f;
+  connectivity_ = 0.3f;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+SecondaryParameterSet::~SecondaryParameterSet() {
+  SharedDtor();
+}
+
+void SecondaryParameterSet::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void SecondaryParameterSet::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* SecondaryParameterSet::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return SecondaryParameterSet_descriptor_;
+}
+
+const SecondaryParameterSet& SecondaryParameterSet::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_city_2eproto();
+  return *default_instance_;
+}
+
+SecondaryParameterSet* SecondaryParameterSet::default_instance_ = NULL;
+
+SecondaryParameterSet* SecondaryParameterSet::New() const {
+  return new SecondaryParameterSet;
+}
+
+void SecondaryParameterSet::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    cell_id_ = 0;
+    segment_size_ = 10;
+    segment_size_deviation_ = 0.5f;
+    degree_ = 2;
+    degree_deviation_ = 0.5f;
+    snap_size_ = 20;
+    snap_size_deviation_ = 0.5f;
+    connectivity_ = 0.3f;
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool SecondaryParameterSet::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional int32 cell_id = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &cell_id_)));
+          set_has_cell_id();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(21)) goto parse_segment_size;
+        break;
+      }
+
+      // optional float segment_size = 2 [default = 10];
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_segment_size:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &segment_size_)));
+          set_has_segment_size();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(29)) goto parse_segment_size_deviation;
+        break;
+      }
+
+      // optional float segment_size_deviation = 3 [default = 0.5];
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_segment_size_deviation:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &segment_size_deviation_)));
+          set_has_segment_size_deviation();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(32)) goto parse_degree;
+        break;
+      }
+
+      // optional int32 degree = 4 [default = 2];
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_degree:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &degree_)));
+          set_has_degree();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(45)) goto parse_degree_deviation;
+        break;
+      }
+
+      // optional float degree_deviation = 5 [default = 0.5];
+      case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_degree_deviation:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &degree_deviation_)));
+          set_has_degree_deviation();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(53)) goto parse_snap_size;
+        break;
+      }
+
+      // optional float snap_size = 6 [default = 20];
+      case 6: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_snap_size:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &snap_size_)));
+          set_has_snap_size();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(61)) goto parse_snap_size_deviation;
+        break;
+      }
+
+      // optional float snap_size_deviation = 7 [default = 0.5];
+      case 7: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_snap_size_deviation:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &snap_size_deviation_)));
+          set_has_snap_size_deviation();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(69)) goto parse_connectivity;
+        break;
+      }
+
+      // optional float connectivity = 8 [default = 0.3];
+      case 8: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_connectivity:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &connectivity_)));
+          set_has_connectivity();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void SecondaryParameterSet::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // optional int32 cell_id = 1;
+  if (has_cell_id()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->cell_id(), output);
+  }
+
+  // optional float segment_size = 2 [default = 10];
+  if (has_segment_size()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(2, this->segment_size(), output);
+  }
+
+  // optional float segment_size_deviation = 3 [default = 0.5];
+  if (has_segment_size_deviation()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(3, this->segment_size_deviation(), output);
+  }
+
+  // optional int32 degree = 4 [default = 2];
+  if (has_degree()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->degree(), output);
+  }
+
+  // optional float degree_deviation = 5 [default = 0.5];
+  if (has_degree_deviation()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(5, this->degree_deviation(), output);
+  }
+
+  // optional float snap_size = 6 [default = 20];
+  if (has_snap_size()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(6, this->snap_size(), output);
+  }
+
+  // optional float snap_size_deviation = 7 [default = 0.5];
+  if (has_snap_size_deviation()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(7, this->snap_size_deviation(), output);
+  }
+
+  // optional float connectivity = 8 [default = 0.3];
+  if (has_connectivity()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(8, this->connectivity(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* SecondaryParameterSet::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // optional int32 cell_id = 1;
+  if (has_cell_id()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->cell_id(), target);
+  }
+
+  // optional float segment_size = 2 [default = 10];
+  if (has_segment_size()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(2, this->segment_size(), target);
+  }
+
+  // optional float segment_size_deviation = 3 [default = 0.5];
+  if (has_segment_size_deviation()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(3, this->segment_size_deviation(), target);
+  }
+
+  // optional int32 degree = 4 [default = 2];
+  if (has_degree()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->degree(), target);
+  }
+
+  // optional float degree_deviation = 5 [default = 0.5];
+  if (has_degree_deviation()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(5, this->degree_deviation(), target);
+  }
+
+  // optional float snap_size = 6 [default = 20];
+  if (has_snap_size()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(6, this->snap_size(), target);
+  }
+
+  // optional float snap_size_deviation = 7 [default = 0.5];
+  if (has_snap_size_deviation()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(7, this->snap_size_deviation(), target);
+  }
+
+  // optional float connectivity = 8 [default = 0.3];
+  if (has_connectivity()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(8, this->connectivity(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int SecondaryParameterSet::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional int32 cell_id = 1;
+    if (has_cell_id()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->cell_id());
+    }
+
+    // optional float segment_size = 2 [default = 10];
+    if (has_segment_size()) {
+      total_size += 1 + 4;
+    }
+
+    // optional float segment_size_deviation = 3 [default = 0.5];
+    if (has_segment_size_deviation()) {
+      total_size += 1 + 4;
+    }
+
+    // optional int32 degree = 4 [default = 2];
+    if (has_degree()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->degree());
+    }
+
+    // optional float degree_deviation = 5 [default = 0.5];
+    if (has_degree_deviation()) {
+      total_size += 1 + 4;
+    }
+
+    // optional float snap_size = 6 [default = 20];
+    if (has_snap_size()) {
+      total_size += 1 + 4;
+    }
+
+    // optional float snap_size_deviation = 7 [default = 0.5];
+    if (has_snap_size_deviation()) {
+      total_size += 1 + 4;
+    }
+
+    // optional float connectivity = 8 [default = 0.3];
+    if (has_connectivity()) {
+      total_size += 1 + 4;
+    }
+
+  }
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void SecondaryParameterSet::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const SecondaryParameterSet* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const SecondaryParameterSet*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void SecondaryParameterSet::MergeFrom(const SecondaryParameterSet& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_cell_id()) {
+      set_cell_id(from.cell_id());
+    }
+    if (from.has_segment_size()) {
+      set_segment_size(from.segment_size());
+    }
+    if (from.has_segment_size_deviation()) {
+      set_segment_size_deviation(from.segment_size_deviation());
+    }
+    if (from.has_degree()) {
+      set_degree(from.degree());
+    }
+    if (from.has_degree_deviation()) {
+      set_degree_deviation(from.degree_deviation());
+    }
+    if (from.has_snap_size()) {
+      set_snap_size(from.snap_size());
+    }
+    if (from.has_snap_size_deviation()) {
+      set_snap_size_deviation(from.snap_size_deviation());
+    }
+    if (from.has_connectivity()) {
+      set_connectivity(from.connectivity());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void SecondaryParameterSet::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void SecondaryParameterSet::CopyFrom(const SecondaryParameterSet& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool SecondaryParameterSet::IsInitialized() const {
+
+  return true;
+}
+
+void SecondaryParameterSet::Swap(SecondaryParameterSet* other) {
+  if (other != this) {
+    std::swap(cell_id_, other->cell_id_);
+    std::swap(segment_size_, other->segment_size_);
+    std::swap(segment_size_deviation_, other->segment_size_deviation_);
+    std::swap(degree_, other->degree_);
+    std::swap(degree_deviation_, other->degree_deviation_);
+    std::swap(snap_size_, other->snap_size_);
+    std::swap(snap_size_deviation_, other->snap_size_deviation_);
+    std::swap(connectivity_, other->connectivity_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata SecondaryParameterSet::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = SecondaryParameterSet_descriptor_;
+  metadata.reflection = SecondaryParameterSet_reflection_;
   return metadata;
 }
 
@@ -788,6 +1304,7 @@ void StepSettings::Swap(StepSettings* other) {
 
 #ifndef _MSC_VER
 const int Settings::kStepSettingsFieldNumber;
+const int Settings::kParameterSetFieldNumber;
 #endif  // !_MSC_VER
 
 Settings::Settings()
@@ -848,6 +1365,7 @@ void Settings::Clear() {
       if (step_settings_ != NULL) step_settings_->::citygen::protocol::StepSettings::Clear();
     }
   }
+  parameter_set_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -867,6 +1385,21 @@ bool Settings::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(18)) goto parse_parameter_set;
+        break;
+      }
+
+      // repeated .citygen.protocol.SecondaryParameterSet parameter_set = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_parameter_set:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_parameter_set()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_parameter_set;
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -895,6 +1428,12 @@ void Settings::SerializeWithCachedSizes(
       1, this->step_settings(), output);
   }
 
+  // repeated .citygen.protocol.SecondaryParameterSet parameter_set = 2;
+  for (int i = 0; i < this->parameter_set_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      2, this->parameter_set(i), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -908,6 +1447,13 @@ void Settings::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         1, this->step_settings(), target);
+  }
+
+  // repeated .citygen.protocol.SecondaryParameterSet parameter_set = 2;
+  for (int i = 0; i < this->parameter_set_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        2, this->parameter_set(i), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -929,6 +1475,14 @@ int Settings::ByteSize() const {
     }
 
   }
+  // repeated .citygen.protocol.SecondaryParameterSet parameter_set = 2;
+  total_size += 1 * this->parameter_set_size();
+  for (int i = 0; i < this->parameter_set_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->parameter_set(i));
+  }
+
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -954,6 +1508,7 @@ void Settings::MergeFrom(const ::google::protobuf::Message& from) {
 
 void Settings::MergeFrom(const Settings& from) {
   GOOGLE_CHECK_NE(&from, this);
+  parameter_set_.MergeFrom(from.parameter_set_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_step_settings()) {
       mutable_step_settings()->::citygen::protocol::StepSettings::MergeFrom(from.step_settings());
@@ -982,6 +1537,7 @@ bool Settings::IsInitialized() const {
 void Settings::Swap(Settings* other) {
   if (other != this) {
     std::swap(step_settings_, other->step_settings_);
+    parameter_set_.Swap(&other->parameter_set_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

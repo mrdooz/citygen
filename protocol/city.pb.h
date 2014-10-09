@@ -35,6 +35,7 @@ void protobuf_AssignDesc_city_2eproto();
 void protobuf_ShutdownFile_city_2eproto();
 
 class Vector3;
+class SecondaryParameterSet;
 class StepSettings;
 class Settings;
 class City;
@@ -140,6 +141,158 @@ class Vector3 : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static Vector3* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class SecondaryParameterSet : public ::google::protobuf::Message {
+ public:
+  SecondaryParameterSet();
+  virtual ~SecondaryParameterSet();
+
+  SecondaryParameterSet(const SecondaryParameterSet& from);
+
+  inline SecondaryParameterSet& operator=(const SecondaryParameterSet& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const SecondaryParameterSet& default_instance();
+
+  void Swap(SecondaryParameterSet* other);
+
+  // implements Message ----------------------------------------------
+
+  SecondaryParameterSet* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const SecondaryParameterSet& from);
+  void MergeFrom(const SecondaryParameterSet& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int32 cell_id = 1;
+  inline bool has_cell_id() const;
+  inline void clear_cell_id();
+  static const int kCellIdFieldNumber = 1;
+  inline ::google::protobuf::int32 cell_id() const;
+  inline void set_cell_id(::google::protobuf::int32 value);
+
+  // optional float segment_size = 2 [default = 10];
+  inline bool has_segment_size() const;
+  inline void clear_segment_size();
+  static const int kSegmentSizeFieldNumber = 2;
+  inline float segment_size() const;
+  inline void set_segment_size(float value);
+
+  // optional float segment_size_deviation = 3 [default = 0.5];
+  inline bool has_segment_size_deviation() const;
+  inline void clear_segment_size_deviation();
+  static const int kSegmentSizeDeviationFieldNumber = 3;
+  inline float segment_size_deviation() const;
+  inline void set_segment_size_deviation(float value);
+
+  // optional int32 degree = 4 [default = 2];
+  inline bool has_degree() const;
+  inline void clear_degree();
+  static const int kDegreeFieldNumber = 4;
+  inline ::google::protobuf::int32 degree() const;
+  inline void set_degree(::google::protobuf::int32 value);
+
+  // optional float degree_deviation = 5 [default = 0.5];
+  inline bool has_degree_deviation() const;
+  inline void clear_degree_deviation();
+  static const int kDegreeDeviationFieldNumber = 5;
+  inline float degree_deviation() const;
+  inline void set_degree_deviation(float value);
+
+  // optional float snap_size = 6 [default = 20];
+  inline bool has_snap_size() const;
+  inline void clear_snap_size();
+  static const int kSnapSizeFieldNumber = 6;
+  inline float snap_size() const;
+  inline void set_snap_size(float value);
+
+  // optional float snap_size_deviation = 7 [default = 0.5];
+  inline bool has_snap_size_deviation() const;
+  inline void clear_snap_size_deviation();
+  static const int kSnapSizeDeviationFieldNumber = 7;
+  inline float snap_size_deviation() const;
+  inline void set_snap_size_deviation(float value);
+
+  // optional float connectivity = 8 [default = 0.3];
+  inline bool has_connectivity() const;
+  inline void clear_connectivity();
+  static const int kConnectivityFieldNumber = 8;
+  inline float connectivity() const;
+  inline void set_connectivity(float value);
+
+  // @@protoc_insertion_point(class_scope:citygen.protocol.SecondaryParameterSet)
+ private:
+  inline void set_has_cell_id();
+  inline void clear_has_cell_id();
+  inline void set_has_segment_size();
+  inline void clear_has_segment_size();
+  inline void set_has_segment_size_deviation();
+  inline void clear_has_segment_size_deviation();
+  inline void set_has_degree();
+  inline void clear_has_degree();
+  inline void set_has_degree_deviation();
+  inline void clear_has_degree_deviation();
+  inline void set_has_snap_size();
+  inline void clear_has_snap_size();
+  inline void set_has_snap_size_deviation();
+  inline void clear_has_snap_size_deviation();
+  inline void set_has_connectivity();
+  inline void clear_has_connectivity();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::int32 cell_id_;
+  float segment_size_;
+  float segment_size_deviation_;
+  ::google::protobuf::int32 degree_;
+  float degree_deviation_;
+  float snap_size_;
+  float snap_size_deviation_;
+  float connectivity_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
+
+  friend void  protobuf_AddDesc_city_2eproto();
+  friend void protobuf_AssignDesc_city_2eproto();
+  friend void protobuf_ShutdownFile_city_2eproto();
+
+  void InitAsDefaultInstance();
+  static SecondaryParameterSet* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -318,6 +471,18 @@ class Settings : public ::google::protobuf::Message {
   inline ::citygen::protocol::StepSettings* release_step_settings();
   inline void set_allocated_step_settings(::citygen::protocol::StepSettings* step_settings);
 
+  // repeated .citygen.protocol.SecondaryParameterSet parameter_set = 2;
+  inline int parameter_set_size() const;
+  inline void clear_parameter_set();
+  static const int kParameterSetFieldNumber = 2;
+  inline const ::citygen::protocol::SecondaryParameterSet& parameter_set(int index) const;
+  inline ::citygen::protocol::SecondaryParameterSet* mutable_parameter_set(int index);
+  inline ::citygen::protocol::SecondaryParameterSet* add_parameter_set();
+  inline const ::google::protobuf::RepeatedPtrField< ::citygen::protocol::SecondaryParameterSet >&
+      parameter_set() const;
+  inline ::google::protobuf::RepeatedPtrField< ::citygen::protocol::SecondaryParameterSet >*
+      mutable_parameter_set();
+
   // @@protoc_insertion_point(class_scope:citygen.protocol.Settings)
  private:
   inline void set_has_step_settings();
@@ -326,9 +491,10 @@ class Settings : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::citygen::protocol::StepSettings* step_settings_;
+  ::google::protobuf::RepeatedPtrField< ::citygen::protocol::SecondaryParameterSet > parameter_set_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
 
   friend void  protobuf_AddDesc_city_2eproto();
   friend void protobuf_AssignDesc_city_2eproto();
@@ -509,6 +675,186 @@ inline void Vector3::set_z(float value) {
 
 // -------------------------------------------------------------------
 
+// SecondaryParameterSet
+
+// optional int32 cell_id = 1;
+inline bool SecondaryParameterSet::has_cell_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void SecondaryParameterSet::set_has_cell_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void SecondaryParameterSet::clear_has_cell_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void SecondaryParameterSet::clear_cell_id() {
+  cell_id_ = 0;
+  clear_has_cell_id();
+}
+inline ::google::protobuf::int32 SecondaryParameterSet::cell_id() const {
+  return cell_id_;
+}
+inline void SecondaryParameterSet::set_cell_id(::google::protobuf::int32 value) {
+  set_has_cell_id();
+  cell_id_ = value;
+}
+
+// optional float segment_size = 2 [default = 10];
+inline bool SecondaryParameterSet::has_segment_size() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void SecondaryParameterSet::set_has_segment_size() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void SecondaryParameterSet::clear_has_segment_size() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void SecondaryParameterSet::clear_segment_size() {
+  segment_size_ = 10;
+  clear_has_segment_size();
+}
+inline float SecondaryParameterSet::segment_size() const {
+  return segment_size_;
+}
+inline void SecondaryParameterSet::set_segment_size(float value) {
+  set_has_segment_size();
+  segment_size_ = value;
+}
+
+// optional float segment_size_deviation = 3 [default = 0.5];
+inline bool SecondaryParameterSet::has_segment_size_deviation() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void SecondaryParameterSet::set_has_segment_size_deviation() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void SecondaryParameterSet::clear_has_segment_size_deviation() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void SecondaryParameterSet::clear_segment_size_deviation() {
+  segment_size_deviation_ = 0.5f;
+  clear_has_segment_size_deviation();
+}
+inline float SecondaryParameterSet::segment_size_deviation() const {
+  return segment_size_deviation_;
+}
+inline void SecondaryParameterSet::set_segment_size_deviation(float value) {
+  set_has_segment_size_deviation();
+  segment_size_deviation_ = value;
+}
+
+// optional int32 degree = 4 [default = 2];
+inline bool SecondaryParameterSet::has_degree() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void SecondaryParameterSet::set_has_degree() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void SecondaryParameterSet::clear_has_degree() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void SecondaryParameterSet::clear_degree() {
+  degree_ = 2;
+  clear_has_degree();
+}
+inline ::google::protobuf::int32 SecondaryParameterSet::degree() const {
+  return degree_;
+}
+inline void SecondaryParameterSet::set_degree(::google::protobuf::int32 value) {
+  set_has_degree();
+  degree_ = value;
+}
+
+// optional float degree_deviation = 5 [default = 0.5];
+inline bool SecondaryParameterSet::has_degree_deviation() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void SecondaryParameterSet::set_has_degree_deviation() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void SecondaryParameterSet::clear_has_degree_deviation() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void SecondaryParameterSet::clear_degree_deviation() {
+  degree_deviation_ = 0.5f;
+  clear_has_degree_deviation();
+}
+inline float SecondaryParameterSet::degree_deviation() const {
+  return degree_deviation_;
+}
+inline void SecondaryParameterSet::set_degree_deviation(float value) {
+  set_has_degree_deviation();
+  degree_deviation_ = value;
+}
+
+// optional float snap_size = 6 [default = 20];
+inline bool SecondaryParameterSet::has_snap_size() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void SecondaryParameterSet::set_has_snap_size() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void SecondaryParameterSet::clear_has_snap_size() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void SecondaryParameterSet::clear_snap_size() {
+  snap_size_ = 20;
+  clear_has_snap_size();
+}
+inline float SecondaryParameterSet::snap_size() const {
+  return snap_size_;
+}
+inline void SecondaryParameterSet::set_snap_size(float value) {
+  set_has_snap_size();
+  snap_size_ = value;
+}
+
+// optional float snap_size_deviation = 7 [default = 0.5];
+inline bool SecondaryParameterSet::has_snap_size_deviation() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void SecondaryParameterSet::set_has_snap_size_deviation() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void SecondaryParameterSet::clear_has_snap_size_deviation() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void SecondaryParameterSet::clear_snap_size_deviation() {
+  snap_size_deviation_ = 0.5f;
+  clear_has_snap_size_deviation();
+}
+inline float SecondaryParameterSet::snap_size_deviation() const {
+  return snap_size_deviation_;
+}
+inline void SecondaryParameterSet::set_snap_size_deviation(float value) {
+  set_has_snap_size_deviation();
+  snap_size_deviation_ = value;
+}
+
+// optional float connectivity = 8 [default = 0.3];
+inline bool SecondaryParameterSet::has_connectivity() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void SecondaryParameterSet::set_has_connectivity() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void SecondaryParameterSet::clear_has_connectivity() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void SecondaryParameterSet::clear_connectivity() {
+  connectivity_ = 0.3f;
+  clear_has_connectivity();
+}
+inline float SecondaryParameterSet::connectivity() const {
+  return connectivity_;
+}
+inline void SecondaryParameterSet::set_connectivity(float value) {
+  set_has_connectivity();
+  connectivity_ = value;
+}
+
+// -------------------------------------------------------------------
+
 // StepSettings
 
 // optional int32 num_segments = 1 [default = 20];
@@ -639,6 +985,31 @@ inline void Settings::set_allocated_step_settings(::citygen::protocol::StepSetti
   } else {
     clear_has_step_settings();
   }
+}
+
+// repeated .citygen.protocol.SecondaryParameterSet parameter_set = 2;
+inline int Settings::parameter_set_size() const {
+  return parameter_set_.size();
+}
+inline void Settings::clear_parameter_set() {
+  parameter_set_.Clear();
+}
+inline const ::citygen::protocol::SecondaryParameterSet& Settings::parameter_set(int index) const {
+  return parameter_set_.Get(index);
+}
+inline ::citygen::protocol::SecondaryParameterSet* Settings::mutable_parameter_set(int index) {
+  return parameter_set_.Mutable(index);
+}
+inline ::citygen::protocol::SecondaryParameterSet* Settings::add_parameter_set() {
+  return parameter_set_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::citygen::protocol::SecondaryParameterSet >&
+Settings::parameter_set() const {
+  return parameter_set_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::citygen::protocol::SecondaryParameterSet >*
+Settings::mutable_parameter_set() {
+  return &parameter_set_;
 }
 
 // -------------------------------------------------------------------

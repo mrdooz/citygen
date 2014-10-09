@@ -27,7 +27,7 @@ void Graph::CreateCycle(const Vertex* v)
 
   bool addCycle = true;
 
-  for (auto it = cycles.begin(); it != cycles.end(); )
+  for (auto it = _cycles.begin(); it != _cycles.end(); )
   {
     const Cycle& c = *it;
     bool equal = true;
@@ -55,7 +55,7 @@ void Graph::CreateCycle(const Vertex* v)
     if (c.verts.size() > verts.size())
     {
       // discard an existing cycle, and (perhaps) replace with the smaller one
-      it = cycles.erase(it);
+      it = _cycles.erase(it);
       continue;
     }
 
@@ -66,8 +66,8 @@ void Graph::CreateCycle(const Vertex* v)
 
   if (addCycle)
   {
-    cycles.push_back({verts, BitSet(verts.size())});
-    Cycle& c = cycles.back();
+    _cycles.push_back({verts, BitSet(verts.size())});
+    Cycle& c = _cycles.back();
     for (const Vertex* v : verts)
       c.containsVertex.Set(v->id);
   }
@@ -79,14 +79,14 @@ Vertex* Graph::FindOrCreateVertex(Terrain* terrain, const vec3& v)
   Tri* tri = terrain->FindTri(v);
 
   // check for an existing vertex that points to the given triangle
-  auto it = triToVerts.find(tri);
-  if (it == triToVerts.end())
+  auto it = _triToVerts.find(tri);
+  if (it == _triToVerts.end())
   {
     // must create a new vertex. check if we can reuse an index
-    int id = recycledVertexIndices.empty() ? (int)verts.size() : FrontPop(recycledVertexIndices);
+    int id = _recycledVertexIndices.empty() ? (int) _verts.size() : FrontPop(_recycledVertexIndices);
     Vertex* vtx = new Vertex { (tri->v0 + tri->v1 + tri->v2) / 3.f, tri, id };
-    verts.emplace_back(vtx);
-    triToVerts[tri] = vtx;
+    _verts.emplace_back(vtx);
+    _triToVerts[tri] = vtx;
     return vtx;
   }
 
@@ -100,22 +100,22 @@ void Graph::DeleteVertex(Vertex* vtx)
   // index to the list of recycled indices
   int idx = vtx->id;
   delete vtx;
-  verts[idx] = nullptr;
-  recycledVertexIndices.push_back(idx);
+  _verts[idx] = nullptr;
+  _recycledVertexIndices.push_back(idx);
 }
 
 //----------------------------------------------------------------------------------
 void Graph::AddEdge(Vertex* a, Vertex* b)
 {
-  auto it = vtxPairToEdge.find(make_pair(a->id, b->id));
-  if (it == vtxPairToEdge.end())
+  auto it = _vtxPairToEdge.find(make_pair(a->id, b->id));
+  if (it == _vtxPairToEdge.end())
   {
-    it = vtxPairToEdge.find(make_pair(b->id, a->id));
-    if (it == vtxPairToEdge.end())
+    it = _vtxPairToEdge.find(make_pair(b->id, a->id));
+    if (it == _vtxPairToEdge.end())
     {
       // add the edge if it doesn't exist
-      int id = recycledEdgeIndices.empty() ? (int)edges.size() : FrontPop(recycledEdgeIndices);
-      edges.emplace_back(new Edge{a, b, id});
+      int id = _recycledEdgeIndices.empty() ? (int) _edges.size() : FrontPop(_recycledEdgeIndices);
+      _edges.emplace_back(new Edge{a, b, id});
       a->edges.push_back(id);
       b->edges.push_back(id);
       a->adj.push_back(b);
@@ -132,7 +132,7 @@ void Graph::DeleteEdge(Edge* edge)
   Vertex* b = edge->b;
 
   delete edge;
-  recycledEdgeIndices.push_back(idx);
+  _recycledEdgeIndices.push_back(idx);
 
   // remove the edge from the vertices' edge lists
   a->edges.erase(remove_if(a->edges.begin(), a->edges.end(), [idx](int id) { return id == idx; }), a->edges.end());
@@ -142,22 +142,22 @@ void Graph::DeleteEdge(Edge* edge)
 //----------------------------------------------------------------------------------
 void Graph::DfsCycles()
 {
-  u32 numVerts = (u32)verts.size();
+  u32 numVerts = (u32) _verts.size();
   for (u32 i = 0; i < numVerts; ++i)
   {
     DEBUG_PRINT(printf("s: %d\n", i));
     // reset all the verts
-    for (Vertex* v : verts)
+    for (Vertex* v : _verts)
     {
       v->color = Color::White;
       v->parent = nullptr;
     }
 
-    Vertex* v = verts[i];
+    Vertex* v = _verts[i];
     DfsVisit(v);
   }
 
-  for (const Cycle& c : cycles)
+  for (const Cycle& c : _cycles)
   {
     printf("\ncycle: ");
     for (const Vertex* v : c.verts)
@@ -172,13 +172,13 @@ void Graph::DfsCycles()
 void Graph::Dfs()
 {
   // init verts to white
-  for (Vertex* v : verts)
+  for (Vertex* v : _verts)
   {
     v->color = Color::White;
     v->parent = nullptr;
   }
 
-  for (Vertex* v : verts)
+  for (Vertex* v : _verts)
   {
     DEBUG_PRINT(printf("v: %d\n", v->id));
     if (v->color == Color::White)
@@ -218,17 +218,18 @@ void Graph::DfsVisit(Vertex* v)
 }
 
 //----------------------------------------------------------------------------------
-void Graph::CalcCycles()
+void Graph::CalcCycles(vector<Cycle>* cycles)
 {
   DfsCycles();
+  *cycles = _cycles;
 }
 
 
 //----------------------------------------------------------------------------------
 void Graph::Dump()
 {
-  printf("num_verts: %d\n", (int)verts.size());
-  for (const Vertex* v : verts)
+  printf("num_verts: %d\n", (int) _verts.size());
+  for (const Vertex* v : _verts)
   {
     printf("v: %d\n  ", v->id);
     for (Vertex* u : v->adj)
@@ -238,8 +239,8 @@ void Graph::Dump()
     printf("\n");
   }
 
-  printf("\nnum_edges: %d\n", (int)edges.size());
-  for (const Edge* e : edges)
+  printf("\nnum_edges: %d\n", (int) _edges.size());
+  for (const Edge* e : _edges)
   {
     printf("e: %d, a: %d, d: %d\n", e->id, e->a->id, e->b->id);
   }
@@ -248,18 +249,18 @@ void Graph::Dump()
 //----------------------------------------------------------------------------------
 void Graph::Reset()
 {
-  triToVerts.clear();
-  vtxPairToEdge.clear();
+  _triToVerts.clear();
+  _vtxPairToEdge.clear();
 
-  for (Vertex* v : verts)
+  for (Vertex* v : _verts)
     delete v;
-  verts.clear();
+  _verts.clear();
 
-  for (Edge* e : edges)
+  for (Edge* e : _edges)
     delete e;
-  edges.clear();
+  _edges.clear();
 
-  recycledVertexIndices.clear();
-  recycledEdgeIndices.clear();
-  cycles.clear();
+  _recycledVertexIndices.clear();
+  _recycledEdgeIndices.clear();
+  _cycles.clear();
 }

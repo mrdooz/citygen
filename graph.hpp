@@ -46,7 +46,7 @@ namespace citygen
     void AddEdge(Vertex* a, Vertex* b);
     void DeleteEdge(Edge* edge);
 
-    void CalcCycles();
+    void CalcCycles(vector<Cycle>* cycles);
 
     void DfsCycles();
     void Dfs();
@@ -57,18 +57,18 @@ namespace citygen
 
     void CreateCycle(const Vertex* v);
 
-    unordered_map<Tri*, Vertex*> triToVerts;
+    unordered_map<Tri*, Vertex*> _triToVerts;
     // TODO: using a map here because unordered_map doen't have hash-combine over pairs..
-    map<pair<int, int>, Edge*> vtxPairToEdge;
-    vector<Vertex*> verts;
-    vector<Edge*> edges;
+    map<pair<int, int>, Edge*> _vtxPairToEdge;
+    vector<Vertex*> _verts;
+    vector<Edge*> _edges;
 
     // We never want to shrink the vertex array (because the indices point into it), so when vertices
     // are deleted, their slot in @verts is nulled, and their index added to the recycled list.
-    deque<int> recycledVertexIndices;
-    deque<int> recycledEdgeIndices;
+    deque<int> _recycledVertexIndices;
+    deque<int> _recycledEdgeIndices;
 
-    vector<Cycle> cycles;
+    vector<Cycle> _cycles;
   };
 }
 
