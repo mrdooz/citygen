@@ -30,19 +30,10 @@ void Graph::CreateCycle(const Vertex* v)
   for (auto it = _cycles.begin(); it != _cycles.end(); )
   {
     const Cycle& c = *it;
-    bool equal = true;
 
     // check if another cycle is a subset, or superset, of the candidate cycle
     size_t vertsToCheck = min(c.verts.size(), verts.size());
-    for (size_t i = 0; i < vertsToCheck; ++i)
-    {
-      const Vertex* v = verts[i];
-      if (!c.containsVertex[v->id])
-      {
-        equal = false;
-        break;
-      }
-    }
+    bool equal = all_of(verts.begin(), verts.begin() + vertsToCheck, [&c](const Vertex* v) { return c.containsVertex[v->id]; });
 
     if (!equal)
     {
@@ -66,7 +57,7 @@ void Graph::CreateCycle(const Vertex* v)
 
   if (addCycle)
   {
-    _cycles.push_back({verts, BitSet(verts.size())});
+    _cycles.push_back({verts, BitSet((u32)verts.size())});
     Cycle& c = _cycles.back();
     for (const Vertex* v : verts)
       c.containsVertex.Set(v->id);
@@ -140,35 +131,6 @@ void Graph::DeleteEdge(Edge* edge)
 }
 
 //----------------------------------------------------------------------------------
-void Graph::DfsCycles()
-{
-  u32 numVerts = (u32) _verts.size();
-  for (u32 i = 0; i < numVerts; ++i)
-  {
-    DEBUG_PRINT(printf("s: %d\n", i));
-    // reset all the verts
-    for (Vertex* v : _verts)
-    {
-      v->color = Color::White;
-      v->parent = nullptr;
-    }
-
-    Vertex* v = _verts[i];
-    DfsVisit(v);
-  }
-
-  for (const Cycle& c : _cycles)
-  {
-    printf("\ncycle: ");
-    for (const Vertex* v : c.verts)
-    {
-      printf("%d ", v->id);
-    }
-  }
-
-}
-
-//----------------------------------------------------------------------------------
 void Graph::Dfs()
 {
   // init verts to white
@@ -220,7 +182,31 @@ void Graph::DfsVisit(Vertex* v)
 //----------------------------------------------------------------------------------
 void Graph::CalcCycles(vector<Cycle>* cycles)
 {
-  DfsCycles();
+  // depth first search to detect cycles
+  u32 numVerts = (u32)_verts.size();
+  for (u32 i = 0; i < numVerts; ++i)
+  {
+    DEBUG_PRINT(printf("s: %d\n", i));
+    // reset all the verts
+    for (Vertex* v : _verts)
+    {
+      v->color = Color::White;
+      v->parent = nullptr;
+    }
+
+    Vertex* v = _verts[i];
+    DfsVisit(v);
+  }
+
+  for (const Cycle& c : _cycles)
+  {
+    printf("\ncycle: ");
+    for (const Vertex* v : c.verts)
+    {
+      printf("%d ", v->id);
+    }
+  }
+
   *cycles = _cycles;
 }
 

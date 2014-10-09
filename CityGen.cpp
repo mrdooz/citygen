@@ -144,22 +144,78 @@ void CityGen::Update()
   UpdateImGui();
 }
 
+#if 0
+// calculate initial road segments
+for each boundaryRoad in longest(boundaryRoads)
+  midPoint = calculate deviated road midpoint
+  sourceNode = insertNode(boundaryRoad, midPoint)
+  roadDirection = calculate deviated boundaryRoad perpendicular
+  if placeSegment(sourceNode, roadDirection, ref newNode)
+    nodeQueue.push(newNode, roadDirection)
+
+// process road growth
+while (nodeQueue is not empty)
+  sourceNode = nodeQueue.front().node;
+  roadDirection = nodeQueue.front().direction;
+  nodeQueue.pop();
+
+  for ParamDegree iterations
+    newDirection = rotate roadDirection by i*(360o / ParamDegree)
+    deviate newDirection
+    if placeSegment(sourceNode, newDirection, ref newNode)
+      nodeQueue.push(newNode, newDirection)
+
+// function to place road segment, returns true on success
+placeSegment(sourceNode, roadDirection, ref newNode)
+  roadLength = calculate deviated ParamSegmentLength
+  targetPos = sourceNode.pos + (roadDirection * roadLength)
+  switch (snapInformation(ParamSnapSize, sourceNode, targetPos))
+  case: no snap event
+        // insert node as-is
+      targetNode = createNode(targetPos, roadLength)
+      createRoad(sourceNode, targetNode)
+      return true
+
+  case: road snap event
+        // node intersects existing road, so create node at intersection, and add new road
+      if random value is less than ParamConectivity
+        snapNode = insertNode(snapRoad, snapPoint)
+        newNode = createRoad(sourceNode, snapNode)
+        return true
+
+  case: node snap event
+        // node intersects existing noad, so connect the two
+      if random value is less than ParamConectivity
+        newNode = createRoad(sourceNode, snapNode)
+        return true
+#endif
+
 //----------------------------------------------------------------------------------
 void CityGen::CalcCells()
 {
   vector<Cycle> cycles;
   _graph.CalcCycles(&cycles);
 
-  CalcSecondary(cycles);
-}
-
-//----------------------------------------------------------------------------------
-void CityGen::CalcSecondary(const vector<Cycle>& cycles)
-{
   for (const Cycle& cycle : cycles)
   {
-
+    CalcSecondary(cycle);
   }
+}
+
+struct SecEdge
+{
+
+};
+
+struct SecNode
+{
+  SecNode* parent = nullptr;
+};
+
+//----------------------------------------------------------------------------------
+void CityGen::CalcSecondary(const Cycle& cycle)
+{
+
 }
 
 //----------------------------------------------------------------------------------

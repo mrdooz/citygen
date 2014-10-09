@@ -95,6 +95,9 @@ namespace citygen
   using std::unique_ptr;
   using std::swap;
   using std::remove_if;
+  using std::any_of;
+  using std::all_of;
+  using std::none_of;
 
   using std::function;
 

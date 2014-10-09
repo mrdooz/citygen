@@ -48,7 +48,6 @@ namespace citygen
 
     void CalcCycles(vector<Cycle>* cycles);
 
-    void DfsCycles();
     void Dfs();
     void DfsVisit(Vertex* v);
 

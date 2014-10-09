@@ -85,7 +85,7 @@ namespace citygen
     void SaveSettings(const char* filename);
     void CalcCells();
 
-    void CalcSecondary(const vector<Cycle>& cycles);
+    void CalcSecondary(const Cycle& cycle);
 
     static CityGen* _instance;
     string _appRoot;
