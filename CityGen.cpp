@@ -161,7 +161,8 @@ struct SecEdge
 
 struct SecNode
 {
-
+  SecVertex* vtx;
+  vec3 dir;
 };
 
 SecNode* InsertNode(SecEdge* edge, const vec3& v)
@@ -213,9 +214,15 @@ void CityGen::CalcSecondary(const Cycle& cycle)
     // calc road dir
     // this should lie in the arc in the plane described by the current triangle normal and the edge
     vec3 dir = cross(tri->n, edge->dir);
-    vec3 newNode = pt + GaussianRand(20.f, 3.f);
+    vec3 newNode = pt + GaussianRand(20.f, 3.f) * dir;
     _debugLines.push_back(pt);
     _debugLines.push_back(newNode);
+  }
+
+  deque<SecNode> nodes;
+  while (!nodes.empty())
+  {
+
   }
 
 }
@@ -245,11 +252,13 @@ while (nodeQueue is not empty)
 placeSegment(sourceNode, roadDirection, ref newNode)
   roadLength = calculate deviated ParamSegmentLength
   targetPos = sourceNode.pos + (roadDirection * roadLength)
+
   switch (snapInformation(ParamSnapSize, sourceNode, targetPos))
+
   case: no snap event
         // insert node as-is
       targetNode = createNode(targetPos, roadLength)
-      createRoad(sourceNode, targetNode)
+      newNode = createRoad(sourceNode, targetNode)
       return true
 
   case: road snap event
