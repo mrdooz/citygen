@@ -213,9 +213,9 @@ void CityGen::CalcSecondary(const Cycle& cycle)
     // calc road dir
     // this should lie in the arc in the plane described by the current triangle normal and the edge
     vec3 dir = cross(tri->n, edge->dir);
-//    vec3 dir = cross(edge->dir, tri->n);
+    vec3 newNode = pt + GaussianRand(20.f, 3.f);
     _debugLines.push_back(pt);
-    _debugLines.push_back(pt + 10.f * dir);
+    _debugLines.push_back(newNode);
   }
 
 }

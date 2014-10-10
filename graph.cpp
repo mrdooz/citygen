@@ -57,13 +57,26 @@ void Graph::CreateCycle(const Vertex* v)
 
   if (addCycle)
   {
+    // make sure the cycle has a consistent winding order
+    vec3 a = verts[0]->pos;
+    vec3 b = verts[1]->pos;
+    vec3 c = verts[2]->pos;
+
+    vec3 e0 = a - b;
+    vec3 e1 = c - b;
+    if (cross(e0, e1).z < 0)
+    {
+      // reverse order
+      for (size_t i = 0, e = verts.size() - 1; i < verts.size() / 2; ++i, --e)
+        swap(verts[i], verts[e]);
+    }
+
     _cycles.push_back({verts, BitSet((u32)verts.size())});
-    Cycle& c = _cycles.back();
+    Cycle& cycle = _cycles.back();
     for (const Vertex* v : verts)
-      c.containsVertex.Set(v->id);
+      cycle.containsVertex.Set(v->id);
   }
 
-  // TODO: make sure the cycle has a consistent winding order
 }
 
 //----------------------------------------------------------------------------------
