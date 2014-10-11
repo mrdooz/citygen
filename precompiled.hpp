@@ -109,6 +109,7 @@ namespace citygen
 
   using bristol::exch_null;
   using bristol::lerp;
+  using bristol::randf;
   using bristol::GaussianRand;
 
   using glm::vec2;

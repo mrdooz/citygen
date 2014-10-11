@@ -147,8 +147,6 @@ void CityGen::Update()
 struct SecVertex
 {
   vec3 pos;
-//  SecVertex* parent = nullptr;
-//  vector<SecVertex*> adj;
 };
 
 struct SecEdge
@@ -161,24 +159,93 @@ struct SecEdge
 
 struct SecNode
 {
-  SecVertex* vtx;
+  Tri* tri;
+  vec3 pos;
   vec3 dir;
 };
 
-SecNode* InsertNode(SecEdge* edge, const vec3& v)
+struct SecGraph
 {
-  return new SecNode();
+  SecGraph(u32 numVerts, u32 numEdges)
+  {
+    verts.resize(numVerts);
+    edges.resize(numEdges);
+  }
+
+  ~SecGraph()
+  {
+    ContainerDelete(&verts);
+    ContainerDelete(&edges);
+  }
+
+  vector<SecVertex*> verts;
+  vector<SecEdge*> edges;
+};
+
+
+#define PARAM(name) GaussianRand(params.name, params.name * params.name ## Deviation)
+
+enum class SnapEvent
+{
+  NoSnap,
+  RoadSnap,
+  NodeSnap,
+};
+
+SnapEvent SnapNode(const SecGraph& graph, const vec3& pos, vec3* out)
+{
+  return SnapEvent::NoSnap;
 }
 
+
+void PlaceSegment(const SecGraph& graph, SecNode* node, const vec3& dir, const SecondaryParameterSet& params)
+{
+  vec3 newPos = node->pos + PARAM(segmentSize) * dir;
+  vec3 snapPos;
+
+  // perform snap checking on the new pos.
+  switch (SnapNode(graph, newPos, &snapPos))
+  {
+    case SnapEvent::NoSnap:
+    {
+      break;
+    }
+
+    case SnapEvent::RoadSnap:
+    {
+      // the new position intersects a road, so add a node at the intersection, and add
+      // a new segment between newPos and the intersection
+      if (randf(0, 1) < params.connectivity)
+      {
+        // add node
+      }
+      break;
+    }
+
+    case SnapEvent::NodeSnap:
+    {
+      // new pos is close enough to an existing node to snap them together
+      if (randf(0, 1) < params.connectivity)
+      {
+        // add node
+      }
+      break;
+    }
+  }
+
+}
+
+
 //----------------------------------------------------------------------------------
-void CityGen::CalcSecondary(const Cycle& cycle)
+void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& params)
 {
   const vector<const Vertex*>& cverts = cycle.verts;
   if (cverts.size() < 2)
     return;
 
-  vector<SecEdge*> edges(cverts.size());
-  vector<SecVertex*> verts(cverts.size());
+  SecGraph graph(cverts.size(), cverts.size());
+  vector<SecVertex*>& verts = graph.verts;
+  vector<SecEdge*>& edges   = graph.edges;
 
   // create verts and edges
   for (size_t i = 0; i < cverts.size(); ++i)
@@ -197,6 +264,8 @@ void CityGen::CalcSecondary(const Cycle& cycle)
   // sort edges by length
   sort(edges.begin(), edges.end(), [](const SecEdge* lhs, const SecEdge* rhs) { return lhs->len > rhs->len; });
 
+  deque<SecNode> nodes;
+
   // calc initial road segments
   for (size_t i = 0; i < edges.size(); ++i)
   {
@@ -206,26 +275,49 @@ void CityGen::CalcSecondary(const Cycle& cycle)
 
     // calc deviated midpoint
     vec3 pt = lerp(a->pos, b->pos, GaussianRand(0.5f, 0.1f));
-//    vec3 pt = lerp(a->pos, b->pos, 0.5f);
     Tri* tri = _terrain.FindTri(pt, &pt);
-
-    SecNode* sourceNode = InsertNode(edge, pt);
 
     // calc road dir
     // this should lie in the arc in the plane described by the current triangle normal and the edge
     vec3 dir = cross(tri->n, edge->dir);
-    vec3 newNode = pt + GaussianRand(20.f, 3.f) * dir;
+    vec3 newNode = pt + PARAM(segmentSize) * dir;
+
+    nodes.push_back(SecNode{_terrain.FindTri(newNode), newNode, dir});
+
     _debugLines.push_back(pt);
     _debugLines.push_back(newNode);
   }
 
-  deque<SecNode> nodes;
-  while (!nodes.empty())
+  while (nodes.size() < 200)
   {
+    SecNode node = FrontPop(nodes);
+    float angle = -90;
+    float angleInc = 45;
+    vec3 dir = node.dir;
+    vec3 pos = node.pos;
+    Tri* t = node.tri;
+    mat4 rot;
+    mat4 id;
+
+    for (int i = 0; i < params.degree; ++i)
+    {
+      // create rotation mtx around the triangle normal
+      rot = glm::rotate(id, (float)rand(), t->n);
+      angle += angleInc;
+      vec4 rr(dir.x, dir.y, dir.z, 0);
+      rr = rot * rr;
+      vec3 newDir(rr.x, rr.y, rr.z);
+      vec3 newPos = pos + PARAM(segmentSize) * newDir;
+      nodes.push_back(SecNode{_terrain.FindTri(newPos), newPos, newDir});
+
+      _debugLines.push_back(pos);
+      _debugLines.push_back(newPos);
+    }
 
   }
-
 }
+
+#undef PARAM
 
 #if 0
 // calculate initial road segments
@@ -269,7 +361,7 @@ placeSegment(sourceNode, roadDirection, ref newNode)
         return true
 
   case: node snap event
-        // node intersects existing noad, so connect the two
+        // node intersects existing node, so connect the two
       if random value is less than ParamConectivity
         newNode = createRoad(sourceNode, snapNode)
         return true
@@ -281,9 +373,10 @@ void CityGen::CalcCells()
   vector<Cycle> cycles;
   _graph.CalcCycles(&cycles);
 
+  SecondaryParameterSet params;
   for (const Cycle& cycle : cycles)
   {
-    CalcSecondary(cycle);
+    CalcSecondary(cycle, params);
   }
 }
 

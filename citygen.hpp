@@ -19,7 +19,7 @@ namespace citygen
     void FromProtocol(const protocol::SecondaryParameterSet& proto);
 
     int cellId;
-    float segmentSize = 10;
+    float segmentSize = 20;
     float segmentSizeDeviation = 0.5f;
     int degree = 2;
     float degreeDeviation = 0.5f;
@@ -85,7 +85,7 @@ namespace citygen
     void SaveSettings(const char* filename);
     void CalcCells();
 
-    void CalcSecondary(const Cycle& cycle);
+    void CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& params);
 
     static CityGen* _instance;
     string _appRoot;

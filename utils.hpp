@@ -88,4 +88,11 @@ namespace citygen
     return tmp;
   }
 
+  template <typename T> void ContainerDelete(T* cont)
+  {
+    for (auto t : *cont)
+      delete t;
+    cont->clear();
+  }
+
 }

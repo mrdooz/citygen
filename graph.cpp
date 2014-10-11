@@ -253,15 +253,10 @@ void Graph::Reset()
   _triToVerts.clear();
   _vtxPairToEdge.clear();
 
-  for (Vertex* v : _verts)
-    delete v;
-  _verts.clear();
-
-  for (Edge* e : _edges)
-    delete e;
-  _edges.clear();
-
   _recycledVertexIndices.clear();
   _recycledEdgeIndices.clear();
   _cycles.clear();
+
+  ContainerDelete(&_verts);
+  ContainerDelete(&_edges);
 }
