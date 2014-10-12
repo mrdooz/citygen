@@ -1,3 +1,4 @@
+snap/out/*
 *.vcxproj
 *.sln
 tags
