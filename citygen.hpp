@@ -19,13 +19,13 @@ namespace citygen
     void FromProtocol(const protocol::SecondaryParameterSet& proto);
 
     int cellId;
-    float segmentSize = 20;
+    float segmentSize = 30;
     float segmentSizeDeviation = 0.5f;
     int degree = 2;
     float degreeDeviation = 0.5f;
-    float snapSize = 20;
+    float snapSize = 3;
     float snapSizeDeviation = 0.5f;
-    float connectivity = 0.3f;
+    float connectivity = 0.01f;
   };
 
   struct StepSettings

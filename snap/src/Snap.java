@@ -119,8 +119,8 @@ public class Snap extends PApplet {
         background(192, 64, 0);
         textFont(f, 16);
         fill(255);
-        linePointTest();
-//        drawLineTest();
+//        linePointTest();
+        drawLineTest();
 
     }
 }

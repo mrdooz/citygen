@@ -185,33 +185,117 @@ struct SecGraph
 
 #define PARAM(name) GaussianRand(params.name, params.name * params.name ## Deviation)
 
-enum class SnapEvent
+struct SnapEvent
 {
-  NoSnap,
-  RoadSnap,
-  NodeSnap,
+  enum class Type
+  {
+    NoSnap,
+    NodeSnap,
+    RoadSnap,
+  };
+
+  SnapEvent() : type(Type::NoSnap) {}
+  SnapEvent(const vec3& pos) : pos(pos), type(Type::NodeSnap) {}
+
+  vec3 pos;
+  Type type;
 };
 
-SnapEvent SnapNode(const SecGraph& graph, const vec3& pos, vec3* out)
+bool LinePointIntersect(const vec3& a, const vec3& b, const vec3& n, const vec3& p, float radius)
 {
-  return SnapEvent::NoSnap;
+  // http://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+
+  // determine if @p is within @radius of the line segment @a -> @b.
+  vec3 ap = p - a;
+  vec3 bp = p - b;
+
+  // check if the intersection point is within the segment
+  if (dot(n, ap) < 0)
+    return false;
+
+  if (dot(n, bp) > 0)
+  {
+    // the intersection pt is above the end node, so we want to
+    // do a pt/pt distance check here
+    return false;
+  }
+
+  // calc projection of ap onto ab
+  vec3 ab = b - a;
+  vec3 proj = dot(ap, n) * ab;
+
+  // calc vector between projection and p
+  vec3 dist = ap - proj;
+
+  return dist.length() <= radius;
+}
+
+bool LineIntersect(const vec3& a, const vec3& b, const vec3& c, const vec3& d)
+{
+  // from: http://www-cs.ccny.cuny.edu/~wolberg/capstone/intersection/Intersection%20point%20of%20two%20lines.html
+  float x1 = a.x; float x2 = b.x; float x3 = c.x; float x4 = d.x;
+  float y1 = a.y; float y2 = b.y; float y3 = c.y; float y4 = d.y;
+
+  float numx  = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+  float numy  = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3);
+  float denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+
+  float ua = numx / denom;
+  if (ua < 0 || ua > 1)
+    return false;
+
+  float ub = numy / denom;
+  if (ub < 0 || ub > 1)
+    return false;
+
+  float x = x1 + ua * (x2 - x1);
+  float y = y1 + ua * (y2 - y1);
+
+  return true;
+}
+
+SnapEvent SnapNode(
+    const SecGraph& graph,
+    const vec3& a,
+    const vec3& b,
+    const vec3& dir,
+    const SecondaryParameterSet& params)
+{
+  // test 1: check if the proposed segment is within snap distance to any existing vertex
+
+  for (SecVertex* v : graph.verts)
+  {
+    if (LinePointIntersect(a, b, dir, v->pos, params.snapSize))
+    {
+      return SnapEvent(v->pos);
+    }
+  }
+
+
+  return SnapEvent();
 }
 
 
-void PlaceSegment(const SecGraph& graph, SecNode* node, const vec3& dir, const SecondaryParameterSet& params)
+void PlaceSegment(
+    const SecGraph& graph,
+    const vec3& pos,
+    const vec3& dir,
+    const SecondaryParameterSet& params,
+    deque<SecNode>* nodes)
 {
-  vec3 newPos = node->pos + PARAM(segmentSize) * dir;
+  vec3 newPos = pos + PARAM(segmentSize) * dir;
   vec3 snapPos;
 
   // perform snap checking on the new pos.
-  switch (SnapNode(graph, newPos, &snapPos))
+  SnapEvent snap = SnapNode(graph, pos, newPos, dir, params);
+  switch (snap.type)
   {
-    case SnapEvent::NoSnap:
+    case SnapEvent::Type::NoSnap:
     {
       break;
     }
 
-    case SnapEvent::RoadSnap:
+    case SnapEvent::Type::RoadSnap:
     {
       // the new position intersects a road, so add a node at the intersection, and add
       // a new segment between newPos and the intersection
@@ -222,12 +306,23 @@ void PlaceSegment(const SecGraph& graph, SecNode* node, const vec3& dir, const S
       break;
     }
 
-    case SnapEvent::NodeSnap:
+    case SnapEvent::Type::NodeSnap:
     {
       // new pos is close enough to an existing node to snap them together
       if (randf(0, 1) < params.connectivity)
       {
         // add node
+        newPos = snap.pos;
+        vec3 d = newPos - pos;
+        float xx = sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
+        if (xx > 0.1f)
+        {
+          vec3 newDir = normalize(newPos - pos);
+          nodes->push_back(SecNode{CITYGEN._terrain.FindTri(newPos), newPos, newDir});
+          CITYGEN._debugLines.push_back(pos);
+          CITYGEN._debugLines.push_back(newPos);
+        }
+
       }
       break;
     }
@@ -274,7 +369,7 @@ void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& par
     SecVertex* b  = edge->b;
 
     // calc deviated midpoint
-    vec3 pt = lerp(a->pos, b->pos, GaussianRand(0.5f, 0.1f));
+    vec3 pt = lerp(a->pos, b->pos, GaussianRand(0.5f, 0.5f));
     Tri* tri = _terrain.FindTri(pt, &pt);
 
     // calc road dir
@@ -291,8 +386,8 @@ void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& par
   while (nodes.size() < 200)
   {
     SecNode node = FrontPop(nodes);
-    float angle = -90;
-    float angleInc = 45;
+    float angle = -20;
+    float angleInc = 2 * fabs(angle) / (params.degree - 1);
     vec3 dir = node.dir;
     vec3 pos = node.pos;
     Tri* t = node.tri;
@@ -302,16 +397,14 @@ void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& par
     for (int i = 0; i < params.degree; ++i)
     {
       // create rotation mtx around the triangle normal
-      rot = glm::rotate(id, (float)rand(), t->n);
+      rot = glm::rotate(id, angle, vec3(0,1,0));
       angle += angleInc;
       vec4 rr(dir.x, dir.y, dir.z, 0);
       rr = rot * rr;
       vec3 newDir(rr.x, rr.y, rr.z);
-      vec3 newPos = pos + PARAM(segmentSize) * newDir;
-      nodes.push_back(SecNode{_terrain.FindTri(newPos), newPos, newDir});
 
-      _debugLines.push_back(pos);
-      _debugLines.push_back(newPos);
+      PlaceSegment(graph, pos, newDir, params, &nodes);
+
     }
 
   }
@@ -584,13 +677,14 @@ void CityGen::Render()
 
   // calc proj and view matrix
   glMatrixMode(GL_PROJECTION);
-  g_proj = glm::perspective(60.0f, 1.333f, 1.f, 2000.0f);
+  g_proj = glm::perspective(60.0f, 1.333f, 1.f, 10000.0f);
   glLoadMatrixf(glm::value_ptr(g_proj));
 
+  float z = 1150;
   glMatrixMode(GL_MODELVIEW);
-  g_cameraPos = glm::vec3(0.0f, 30, 0);
-  g_cameraPos = glm::vec3(0.0f, 500, 1500);
-  mat4 dir = glm::lookAt(g_cameraPos, glm::vec3(0, 0, 0), glm::vec3(0, 0, -1) );
+  g_cameraPos = glm::vec3(0.0f, 600, z);
+//  g_cameraPos = glm::vec3(0.0f, 500, 1500);
+  mat4 dir = glm::lookAt(g_cameraPos, glm::vec3(0, 0, z), glm::vec3(0, 0, -1) );
   _rot = CITYGEN._arcball->createViewRotationMatrix();
   g_view = _rot * dir;
   glLoadMatrixf(glm::value_ptr(g_view));
