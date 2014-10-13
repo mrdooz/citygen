@@ -195,10 +195,10 @@ struct SnapEvent
   };
 
   SnapEvent() : type(Type::NoSnap) {}
-  SnapEvent(const vec3& pos) : pos(pos), type(Type::NodeSnap) {}
+  SnapEvent(Type type, const vec3& pos) : type(Type::NodeSnap), pos(pos) {}
 
-  vec3 pos;
   Type type;
+  vec3 pos;
 };
 
 bool LinePointIntersect(const vec3& a, const vec3& b, const vec3& n, const vec3& p, float radius)
@@ -221,16 +221,15 @@ bool LinePointIntersect(const vec3& a, const vec3& b, const vec3& n, const vec3&
   }
 
   // calc projection of ap onto ab
-  vec3 ab = b - a;
-  vec3 proj = dot(ap, n) * ab;
+  vec3 proj = dot(ap, n) * n;
 
   // calc vector between projection and p
   vec3 dist = ap - proj;
-
-  return dist.length() <= radius;
+  float len = length(dist);
+  return len <= radius;
 }
 
-bool LineIntersect(const vec3& a, const vec3& b, const vec3& c, const vec3& d)
+bool LineIntersect(const vec3& a, const vec3& b, const vec3& c, const vec3& d, vec3* out)
 {
   // from: http://www-cs.ccny.cuny.edu/~wolberg/capstone/intersection/Intersection%20point%20of%20two%20lines.html
   float x1 = a.x; float x2 = b.x; float x3 = c.x; float x4 = d.x;
@@ -248,8 +247,8 @@ bool LineIntersect(const vec3& a, const vec3& b, const vec3& c, const vec3& d)
   if (ub < 0 || ub > 1)
     return false;
 
-  float x = x1 + ua * (x2 - x1);
-  float y = y1 + ua * (y2 - y1);
+  out->x = x1 + ua * (x2 - x1);
+  out->y = y1 + ua * (y2 - y1);
 
   return true;
 }
@@ -262,19 +261,32 @@ SnapEvent SnapNode(
     const SecondaryParameterSet& params)
 {
   // test 1: check if the proposed segment is within snap distance to any existing vertex
-
   for (SecVertex* v : graph.verts)
   {
     if (LinePointIntersect(a, b, dir, v->pos, params.snapSize))
     {
-      return SnapEvent(v->pos);
+      return SnapEvent(SnapEvent::Type::NodeSnap, v->pos);
     }
   }
 
+  // test 2: check if the proposed segment intersects any existing segment
+
+  for (SecEdge* e : graph.edges)
+  {
+    vec3 res;
+    if (LineIntersect(a, b, e->a->pos, e->b->pos, &res))
+    {
+      return SnapEvent(SnapEvent::Type::RoadSnap, res);
+    }
+  }
 
   return SnapEvent();
 }
 
+float SafeLen(const vec3& d)
+{
+  return sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
+}
 
 void PlaceSegment(
     const SecGraph& graph,
@@ -292,6 +304,10 @@ void PlaceSegment(
   {
     case SnapEvent::Type::NoSnap:
     {
+      // add the node as is
+      nodes->push_back(SecNode{ CITYGEN._terrain.FindTri(newPos), newPos, dir });
+      CITYGEN._debugLines.push_back(pos);
+      CITYGEN._debugLines.push_back(newPos);
       break;
     }
 
@@ -302,6 +318,14 @@ void PlaceSegment(
       if (randf(0, 1) < params.connectivity)
       {
         // add node
+        newPos = snap.pos;
+        if (SafeLen(newPos - pos) > 0.1f)
+        {
+          vec3 newDir = normalize(newPos - pos);
+          nodes->push_back(SecNode{ CITYGEN._terrain.FindTri(newPos), newPos, newDir });
+          CITYGEN._debugLines.push_back(pos);
+          CITYGEN._debugLines.push_back(newPos);
+        }
       }
       break;
     }
@@ -313,16 +337,13 @@ void PlaceSegment(
       {
         // add node
         newPos = snap.pos;
-        vec3 d = newPos - pos;
-        float xx = sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
-        if (xx > 0.1f)
+        if (SafeLen(newPos - pos) > 0.1f)
         {
           vec3 newDir = normalize(newPos - pos);
           nodes->push_back(SecNode{CITYGEN._terrain.FindTri(newPos), newPos, newDir});
           CITYGEN._debugLines.push_back(pos);
           CITYGEN._debugLines.push_back(newPos);
         }
-
       }
       break;
     }
@@ -338,7 +359,7 @@ void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& par
   if (cverts.size() < 2)
     return;
 
-  SecGraph graph(cverts.size(), cverts.size());
+  SecGraph graph((u32)cverts.size(), (u32)cverts.size());
   vector<SecVertex*>& verts = graph.verts;
   vector<SecEdge*>& edges   = graph.edges;
 
@@ -383,7 +404,7 @@ void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& par
     _debugLines.push_back(newNode);
   }
 
-  while (nodes.size() < 200)
+  while (!nodes.empty() && _debugLines.size() < 1000)
   {
     SecNode node = FrontPop(nodes);
     float angle = -20;
@@ -404,9 +425,7 @@ void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& par
       vec3 newDir(rr.x, rr.y, rr.z);
 
       PlaceSegment(graph, pos, newDir, params, &nodes);
-
     }
-
   }
 }
 
