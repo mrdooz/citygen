@@ -151,6 +151,7 @@ struct SecVertex
 
 struct SecEdge
 {
+  SecEdge(SecVertex* a, SecVertex* b) : a(a), b(b), dir(normalize(b->pos - a->pos)), len(distance(a->pos, b->pos)) {}
   SecVertex* a;
   SecVertex* b;
   vec3 dir;
@@ -159,6 +160,7 @@ struct SecEdge
 
 struct SecNode
 {
+  SecVertex* vtx;
   Tri* tri;
   vec3 pos;
   vec3 dir;
@@ -195,11 +197,21 @@ struct SnapEvent
   };
 
   SnapEvent() : type(Type::NoSnap) {}
-  SnapEvent(Type type, const vec3& pos) : type(Type::NodeSnap), pos(pos) {}
+  SnapEvent(Type type, const vec3& pos) : type(type), vtx(nullptr), pos(pos) {}
+  SnapEvent(Type type, SecVertex* vtx) : type(type), vtx(vtx), pos(vtx->pos) {}
 
   Type type;
+  SecVertex* vtx;
   vec3 pos;
 };
+
+SnapEvent SnapNode(
+    const SecGraph& graph,
+    const vec3& a,
+    const vec3& b,
+    const vec3& dir,
+    const SecondaryParameterSet& params);
+
 
 bool LinePointIntersect(const vec3& a, const vec3& b, const vec3& n, const vec3& p, float radius)
 {
@@ -265,7 +277,7 @@ SnapEvent SnapNode(
   {
     if (LinePointIntersect(a, b, dir, v->pos, params.snapSize))
     {
-      return SnapEvent(SnapEvent::Type::NodeSnap, v->pos);
+      return SnapEvent(SnapEvent::Type::NodeSnap, v);
     }
   }
 
@@ -289,23 +301,27 @@ float SafeLen(const vec3& d)
 }
 
 void PlaceSegment(
-    const SecGraph& graph,
+    SecVertex* org,
     const vec3& pos,
     const vec3& dir,
     const SecondaryParameterSet& params,
+    SecGraph* graph,
     deque<SecNode>* nodes)
 {
   vec3 newPos = pos + PARAM(segmentSize) * dir;
   vec3 snapPos;
 
   // perform snap checking on the new pos.
-  SnapEvent snap = SnapNode(graph, pos, newPos, dir, params);
+  SnapEvent snap = SnapNode(*graph, pos, newPos, dir, params);
   switch (snap.type)
   {
     case SnapEvent::Type::NoSnap:
     {
-      // add the node as is
-      nodes->push_back(SecNode{ CITYGEN._terrain.FindTri(newPos), newPos, dir });
+      // add the node as-is
+      SecVertex* v = new SecVertex{newPos};
+      nodes->push_back(SecNode{v, CITYGEN._terrain.FindTri(newPos), newPos, dir });
+      graph->verts.push_back(v);
+      graph->edges.push_back(new SecEdge{org, v});
       CITYGEN._debugLines.push_back(pos);
       CITYGEN._debugLines.push_back(newPos);
       break;
@@ -321,8 +337,11 @@ void PlaceSegment(
         newPos = snap.pos;
         if (SafeLen(newPos - pos) > 0.1f)
         {
+          SecVertex* v = new SecVertex{newPos};
           vec3 newDir = normalize(newPos - pos);
-          nodes->push_back(SecNode{ CITYGEN._terrain.FindTri(newPos), newPos, newDir });
+          nodes->push_back(SecNode{ v, CITYGEN._terrain.FindTri(newPos), newPos, newDir });
+          graph->verts.push_back(v);
+          graph->edges.push_back(new SecEdge{org, v});
           CITYGEN._debugLines.push_back(pos);
           CITYGEN._debugLines.push_back(newPos);
         }
@@ -336,11 +355,12 @@ void PlaceSegment(
       if (randf(0, 1) < params.connectivity)
       {
         // add node
-        newPos = snap.pos;
+        newPos = snap.vtx->pos;
         if (SafeLen(newPos - pos) > 0.1f)
         {
           vec3 newDir = normalize(newPos - pos);
-          nodes->push_back(SecNode{CITYGEN._terrain.FindTri(newPos), newPos, newDir});
+          nodes->push_back(SecNode{snap.vtx, CITYGEN._terrain.FindTri(newPos), newPos, newDir});
+          graph->edges.push_back(new SecEdge{org, snap.vtx});
           CITYGEN._debugLines.push_back(pos);
           CITYGEN._debugLines.push_back(newPos);
         }
@@ -374,7 +394,7 @@ void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& par
   {
     SecVertex* a  = verts[i];
     SecVertex* b  = verts[(i+1) % verts.size()];
-    edges[i]      = new SecEdge{a, b, normalize(b->pos - a->pos), distance(a->pos, b->pos)};
+    edges[i]      = new SecEdge(a, b);
   }
 
   // sort edges by length
@@ -398,7 +418,9 @@ void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& par
     vec3 dir = cross(tri->n, edge->dir);
     vec3 newNode = pt + PARAM(segmentSize) * dir;
 
-    nodes.push_back(SecNode{_terrain.FindTri(newNode), newNode, dir});
+    SecVertex* v = new SecVertex{};
+
+    nodes.push_back(SecNode{v, _terrain.FindTri(newNode), newNode, dir});
 
     _debugLines.push_back(pt);
     _debugLines.push_back(newNode);
@@ -424,7 +446,7 @@ void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& par
       rr = rot * rr;
       vec3 newDir(rr.x, rr.y, rr.z);
 
-      PlaceSegment(graph, pos, newDir, params, &nodes);
+      PlaceSegment(node.vtx, pos, newDir, params, &graph, &nodes);
     }
   }
 }
