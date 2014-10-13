@@ -8,24 +8,24 @@ namespace citygen
   namespace protocol
   {
     class StepSettings;
-    class SecondaryParameterSet;
+    class CellParameterSet;
   }
 
   class Arcball;
 
-  struct SecondaryParameterSet
+  struct CellParameterSet
   {
-    void ToProtocol(protocol::SecondaryParameterSet* proto) const;
-    void FromProtocol(const protocol::SecondaryParameterSet& proto);
+    void ToProtocol(protocol::CellParameterSet* proto) const;
+    void FromProtocol(const protocol::CellParameterSet& proto);
 
     int cellId;
     float segmentSize = 30;
     float segmentSizeDeviation = 0.5f;
     int degree = 2;
     float degreeDeviation = 0.5f;
-    float snapSize = 3;
+    float snapSize = 10;
     float snapSizeDeviation = 0.5f;
-    float connectivity = 0.01f;
+    float connectivity = 1.f;
   };
 
   struct StepSettings
@@ -85,7 +85,7 @@ namespace citygen
     void SaveSettings(const char* filename);
     void CalcCells();
 
-    void CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& params);
+    void CalcSecondary(const Cycle& cycle, const CellParameterSet& params);
 
     static CityGen* _instance;
     string _appRoot;
@@ -109,7 +109,7 @@ namespace citygen
     glm::mat4x4 _rot;
 
     StepSettings _stepSettings;
-    vector<SecondaryParameterSet> _parameterSet;
+    vector<CellParameterSet> _cellParamterSets;
     State _state;
 
     Graph _graph;

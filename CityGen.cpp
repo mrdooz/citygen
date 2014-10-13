@@ -10,7 +10,7 @@ using namespace citygen;
 CityGen* CityGen::_instance;
 
 //----------------------------------------------------------------------------------
-void SecondaryParameterSet::ToProtocol(protocol::SecondaryParameterSet* proto) const
+void CellParameterSet::ToProtocol(protocol::CellParameterSet* proto) const
 {
   proto->set_cell_id(cellId);
   proto->set_segment_size(segmentSize);
@@ -23,7 +23,7 @@ void SecondaryParameterSet::ToProtocol(protocol::SecondaryParameterSet* proto) c
 }
 
 //----------------------------------------------------------------------------------
-void SecondaryParameterSet::FromProtocol(const protocol::SecondaryParameterSet& proto)
+void CellParameterSet::FromProtocol(const protocol::CellParameterSet& proto)
 {
   cellId                = proto.cell_id();
   segmentSize           = proto.segment_size();
@@ -195,7 +195,7 @@ struct SnapEvent
     NodeSnap,
     RoadSnap,
   };
-
+  
   SnapEvent() : type(Type::NoSnap) {}
   SnapEvent(Type type, const vec3& pos) : type(type), vtx(nullptr), pos(pos) {}
   SnapEvent(Type type, SecVertex* vtx) : type(type), vtx(vtx), pos(vtx->pos) {}
@@ -210,7 +210,7 @@ SnapEvent SnapNode(
     const vec3& a,
     const vec3& b,
     const vec3& dir,
-    const SecondaryParameterSet& params);
+    const CellParameterSet& params);
 
 
 bool LinePointIntersect(const vec3& a, const vec3& b, const vec3& n, const vec3& p, float radius)
@@ -246,36 +246,39 @@ bool LineIntersect(const vec3& a, const vec3& b, const vec3& c, const vec3& d, v
   // from: http://www-cs.ccny.cuny.edu/~wolberg/capstone/intersection/Intersection%20point%20of%20two%20lines.html
   float x1 = a.x; float x2 = b.x; float x3 = c.x; float x4 = d.x;
   float y1 = a.y; float y2 = b.y; float y3 = c.y; float y4 = d.y;
+  float z1 = a.z; float z2 = b.z; float z3 = c.z; float z4 = d.z;
 
-  float numx  = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
-  float numy  = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3);
-  float denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+  float numx  = (x4 - x3) * (z1 - z3) - (z4 - z3) * (x1 - x3);
+  float numz  = (x2 - x1) * (z1 - z3) - (z2 - z1) * (x1 - x3);
+  float denom = (z4 - z3) * (x2 - x1) - (x4 - x3) * (z2 - z1);
 
   float ua = numx / denom;
   if (ua < 0 || ua > 1)
     return false;
 
-  float ub = numy / denom;
+  float ub = numz / denom;
   if (ub < 0 || ub > 1)
     return false;
 
   out->x = x1 + ua * (x2 - x1);
   out->y = y1 + ua * (y2 - y1);
+  out->z = z1 + ua * (z2 - z1);
 
   return true;
 }
 
 SnapEvent SnapNode(
     const SecGraph& graph,
+    SecVertex* org,
     const vec3& a,
     const vec3& b,
     const vec3& dir,
-    const SecondaryParameterSet& params)
+    const CellParameterSet& params)
 {
   // test 1: check if the proposed segment is within snap distance to any existing vertex
   for (SecVertex* v : graph.verts)
   {
-    if (LinePointIntersect(a, b, dir, v->pos, params.snapSize))
+    if (org != v && LinePointIntersect(a, b, dir, v->pos, params.snapSize))
     {
       return SnapEvent(SnapEvent::Type::NodeSnap, v);
     }
@@ -286,7 +289,7 @@ SnapEvent SnapNode(
   for (SecEdge* e : graph.edges)
   {
     vec3 res;
-    if (LineIntersect(a, b, e->a->pos, e->b->pos, &res))
+    if (org != e->a && org != e->b && LineIntersect(a, b, e->a->pos, e->b->pos, &res))
     {
       return SnapEvent(SnapEvent::Type::RoadSnap, res);
     }
@@ -304,7 +307,7 @@ void PlaceSegment(
     SecVertex* org,
     const vec3& pos,
     const vec3& dir,
-    const SecondaryParameterSet& params,
+    const CellParameterSet& params,
     SecGraph* graph,
     deque<SecNode>* nodes)
 {
@@ -312,7 +315,7 @@ void PlaceSegment(
   vec3 snapPos;
 
   // perform snap checking on the new pos.
-  SnapEvent snap = SnapNode(*graph, pos, newPos, dir, params);
+  SnapEvent snap = SnapNode(*graph, org, pos, newPos, dir, params);
   switch (snap.type)
   {
     case SnapEvent::Type::NoSnap:
@@ -339,7 +342,7 @@ void PlaceSegment(
         {
           SecVertex* v = new SecVertex{newPos};
           vec3 newDir = normalize(newPos - pos);
-          nodes->push_back(SecNode{ v, CITYGEN._terrain.FindTri(newPos), newPos, newDir });
+          //nodes->push_back(SecNode{ v, CITYGEN._terrain.FindTri(newPos), newPos, newDir });
           graph->verts.push_back(v);
           graph->edges.push_back(new SecEdge{org, v});
           CITYGEN._debugLines.push_back(pos);
@@ -373,7 +376,7 @@ void PlaceSegment(
 
 
 //----------------------------------------------------------------------------------
-void CityGen::CalcSecondary(const Cycle& cycle, const SecondaryParameterSet& params)
+void CityGen::CalcSecondary(const Cycle& cycle, const CellParameterSet& params)
 {
   const vector<const Vertex*>& cverts = cycle.verts;
   if (cverts.size() < 2)
@@ -504,13 +507,14 @@ placeSegment(sourceNode, roadDirection, ref newNode)
 //----------------------------------------------------------------------------------
 void CityGen::CalcCells()
 {
+    _debugLines.clear();
+
   vector<Cycle> cycles;
   _graph.CalcCycles(&cycles);
 
-  SecondaryParameterSet params;
   for (const Cycle& cycle : cycles)
   {
-    CalcSecondary(cycle, params);
+    CalcSecondary(cycle, _cellParamterSets.back());
   }
 }
 
@@ -698,6 +702,8 @@ void CityGen::RenderUI()
     GeneratePrimary();
   }
 
+  ImGui::Separator();
+
   ImGui::Checkbox("normals", &_drawNormals);
   ImGui::Checkbox("debuglines", &_drawDebugLines);
 
@@ -819,10 +825,17 @@ void CityGen::LoadSettings(const char* filename)
   protocol::Settings settings = city.settings();
   _stepSettings.FromProtocol(settings.step_settings());
 
-  for (const auto& ps : settings.parameter_set())
+  _cellParamterSets.clear();
+  for (const auto& ps : settings.cell_parameter_set())
   {
-    _parameterSet.push_back(SecondaryParameterSet());
-    _parameterSet.back().FromProtocol(ps);
+    _cellParamterSets.push_back(CellParameterSet());
+    _cellParamterSets.back().FromProtocol(ps);
+  }
+
+  // add a default parameter set
+  if (_cellParamterSets.empty())
+  {
+    _cellParamterSets.push_back(CellParameterSet());
   }
 
   // load nodes
@@ -853,8 +866,8 @@ void CityGen::SaveSettings(const char* filename)
   protocol::Settings* settings = city.mutable_settings();
   _stepSettings.ToProtocol(settings->mutable_step_settings());
 
-  for (const auto& ps : _parameterSet)
-    ps.ToProtocol(settings->add_parameter_set());
+  for (const auto& ps : _cellParamterSets)
+    ps.ToProtocol(settings->add_cell_parameter_set());
 
   for (const vec3& v : _nodes)
   {

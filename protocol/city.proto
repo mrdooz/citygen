@@ -7,7 +7,7 @@ message Vector3
   optional float z = 3;
 }
 
-message SecondaryParameterSet
+message CellParameterSet
 {
   optional int32 cell_id                    = 1;
   optional float segment_size               = 2 [default = 10];
@@ -31,7 +31,7 @@ message StepSettings
 message Settings
 {
   optional StepSettings step_settings = 1;
-  repeated SecondaryParameterSet parameter_set = 2;
+  repeated CellParameterSet cell_parameter_set = 2;
 }
 
 message City
