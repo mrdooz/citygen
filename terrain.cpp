@@ -1,6 +1,34 @@
 #include "terrain.hpp"
+#include "citygen.hpp"
+#include "protocol/city.pb.h"
 
 using namespace citygen;
+
+//----------------------------------------------------------------------------------
+void Terrain::ToProtocol(protocol::TerrainSettings* proto) const
+{
+  proto->set_scale(_scale);
+  proto->set_height_scale(_heightScale);
+}
+
+//----------------------------------------------------------------------------------
+void Terrain::FromProtocol(const protocol::TerrainSettings& proto)
+{
+  _scale = proto.scale();
+  _heightScale = proto.height_scale();
+}
+
+//----------------------------------------------------------------------------------
+bool Terrain::Init(const char* filename)
+{
+  _data = stbi_load((g_city._configBase + filename).c_str(), &_w, &_h, &_depth, 0);
+  if (!_data)
+    return false;
+
+  CreateMesh();
+
+  return true;
+}
 
 //----------------------------------------------------------------------------------
 void Terrain::CreateMesh()

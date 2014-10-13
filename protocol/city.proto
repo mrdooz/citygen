@@ -28,10 +28,17 @@ message StepSettings
   optional float road_height = 4 [default = 5];
 }
 
+message TerrainSettings
+{
+  optional float scale = 1;
+  optional float height_scale = 2;
+}
+
 message Settings
 {
-  optional StepSettings step_settings = 1;
-  repeated CellParameterSet cell_parameter_set = 2;
+  optional TerrainSettings terrain_settings = 1;
+  optional StepSettings step_settings = 2;
+  repeated CellParameterSet cell_parameter_set = 3;
 }
 
 message City

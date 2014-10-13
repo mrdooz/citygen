@@ -7,7 +7,9 @@
 #pragma warning(pop)
 
 using namespace citygen;
-CityGen* CityGen::_instance;
+
+CityGen citygen::g_city;
+Terrain citygen::g_terrain;
 
 //----------------------------------------------------------------------------------
 void CellParameterSet::ToProtocol(protocol::CellParameterSet* proto) const
@@ -58,35 +60,16 @@ CityGen::CityGen()
     : _arcball(nullptr)
     , _drawDebugLines(true)
     , _drawNormals(false)
+#if _WIN32
+    , _configBase("/projects/citygen/")
+  #else
+    , _configBase("/Users/dooz/projects/citygen/")
+#endif
 {
+
   _stateFlags.Set(StateFlagsF::Paused);
   _clickFlags.Set(ClickFlagsF::FirstClick);
 }
-
-//----------------------------------------------------------------------------------
-void CityGen::Create()
-{
-  if (!_instance)
-  {
-    _instance = new CityGen();
-  }
-}
-
-//----------------------------------------------------------------------------------
-void CityGen::Destroy()
-{
-  if (_instance)
-  {
-    delete exch_null(_instance);
-  }
-}
-
-//----------------------------------------------------------------------------------
-CityGen& CityGen::Instance()
-{
-  return *_instance;
-}
-
 
 //----------------------------------------------------------------------------------
 CityGen::~CityGen()
@@ -115,21 +98,20 @@ bool CityGen::Init()
 
   //_plexus = FromProtocol(plexusSettings);
 
-
-  #if _WIN32
-  string base = "/projects/citygen/";
-  #else
-  string base = "/Users/dooz/projects/citygen/";
-  #endif
-
-  _configFile = base + "config/city1.pb";
-  _terrain._data = stbi_load((base + "noise.tga").c_str(), &_terrain._w, &_terrain._h, &_terrain._depth, 0);
-  _terrain.CreateMesh();
-
+  _configFile = _configBase + "config/city1.pb";
   LoadSettings(_configFile.c_str());
+
+  if (!g_terrain.Init("noise.tga"))
+    return false;
+
+  PostLoadSetup();
 
   InitGL();
   InitImGui();
+
+  int w, h;
+  glfwGetWindowSize(g_window, &w, &h);
+  _arcball = new Arcball(w, h);
 
   return true;
 }
@@ -322,11 +304,11 @@ void PlaceSegment(
     {
       // add the node as-is
       SecVertex* v = new SecVertex{newPos};
-      nodes->push_back(SecNode{v, CITYGEN._terrain.FindTri(newPos), newPos, dir });
+      nodes->push_back(SecNode{v, g_terrain.FindTri(newPos), newPos, dir });
       graph->verts.push_back(v);
       graph->edges.push_back(new SecEdge{org, v});
-      CITYGEN._debugLines.push_back(pos);
-      CITYGEN._debugLines.push_back(newPos);
+      g_city._debugLines.push_back(pos);
+      g_city._debugLines.push_back(newPos);
       break;
     }
 
@@ -338,15 +320,15 @@ void PlaceSegment(
       {
         // add node
         newPos = snap.pos;
-        if (SafeLen(newPos - pos) > 0.1f)
+        if (SafeLen(newPos - pos) > 0.01f)
         {
           SecVertex* v = new SecVertex{newPos};
-          vec3 newDir = normalize(newPos - pos);
+//          vec3 newDir = normalize(newPos - pos);
           //nodes->push_back(SecNode{ v, CITYGEN._terrain.FindTri(newPos), newPos, newDir });
           graph->verts.push_back(v);
           graph->edges.push_back(new SecEdge{org, v});
-          CITYGEN._debugLines.push_back(pos);
-          CITYGEN._debugLines.push_back(newPos);
+          g_city._debugLines.push_back(pos);
+          g_city._debugLines.push_back(newPos);
         }
       }
       break;
@@ -359,13 +341,13 @@ void PlaceSegment(
       {
         // add node
         newPos = snap.vtx->pos;
-        if (SafeLen(newPos - pos) > 0.1f)
+        if (SafeLen(newPos - pos) > 0.01f)
         {
           vec3 newDir = normalize(newPos - pos);
-          nodes->push_back(SecNode{snap.vtx, CITYGEN._terrain.FindTri(newPos), newPos, newDir});
+          nodes->push_back(SecNode{snap.vtx, g_terrain.FindTri(newPos), newPos, newDir});
           graph->edges.push_back(new SecEdge{org, snap.vtx});
-          CITYGEN._debugLines.push_back(pos);
-          CITYGEN._debugLines.push_back(newPos);
+          g_city._debugLines.push_back(pos);
+          g_city._debugLines.push_back(newPos);
         }
       }
       break;
@@ -414,7 +396,7 @@ void CityGen::CalcSecondary(const Cycle& cycle, const CellParameterSet& params)
 
     // calc deviated midpoint
     vec3 pt = lerp(a->pos, b->pos, GaussianRand(0.5f, 0.5f));
-    Tri* tri = _terrain.FindTri(pt, &pt);
+    Tri* tri = g_terrain.FindTri(pt, &pt);
 
     // calc road dir
     // this should lie in the arc in the plane described by the current triangle normal and the edge
@@ -423,7 +405,7 @@ void CityGen::CalcSecondary(const Cycle& cycle, const CellParameterSet& params)
 
     SecVertex* v = new SecVertex{};
 
-    nodes.push_back(SecNode{v, _terrain.FindTri(newNode), newNode, dir});
+    nodes.push_back(SecNode{v, g_terrain.FindTri(newNode), newNode, dir});
 
     _debugLines.push_back(pt);
     _debugLines.push_back(newNode);
@@ -507,6 +489,7 @@ placeSegment(sourceNode, roadDirection, ref newNode)
 //----------------------------------------------------------------------------------
 void CityGen::CalcCells()
 {
+  srand(1337);
     _debugLines.clear();
 
   vector<Cycle> cycles;
@@ -535,8 +518,8 @@ void CityGen::AddPoint(const vec3& pt)
       // second click, so add an edge
 
       // create vertices for the points, or get existing ones, if they exist
-      Vertex* v0 = _graph.FindOrCreateVertex(&_terrain, _dragStart);
-      Vertex* v1 = _graph.FindOrCreateVertex(&_terrain, pt);
+      Vertex* v0 = _graph.FindOrCreateVertex(_dragStart);
+      Vertex* v1 = _graph.FindOrCreateVertex(pt);
 
       // only add non-degenerate edges
       if (v0 != v1)
@@ -559,9 +542,8 @@ void CityGen::AddPoint(const vec3& pt)
 //----------------------------------------------------------------------------------
 struct Stepper
 {
-  Stepper(Terrain* terrain, StepSettings* settings, const vec3& start, const vec3& end)
-      : terrain(terrain)
-      , settings(settings)
+  Stepper(StepSettings* settings, const vec3& start, const vec3& end)
+      : settings(settings)
       , cur(start)
       , end(end)
   {
@@ -583,7 +565,7 @@ struct Stepper
     {
       vec3 pt = cur + settings->stepSize * vec3(cosf(a), 0, sinf(a));
 
-      terrain->FindTri(pt, &pt);
+      g_terrain.FindTri(pt, &pt);
       float tmp = length(goal - pt);
       if (tmp < closest)
       {
@@ -598,7 +580,6 @@ struct Stepper
     return cur;
   }
 
-  Terrain* terrain;
   StepSettings *settings;
   vec3 cur, end;
   float angle;
@@ -625,8 +606,8 @@ void CityGen::GeneratePrimary()
     vec3 end(_nodes[curIdx+1]);
 
     // make 2 steppers, one for each direction
-    Stepper forwardStepper(&_terrain, &_stepSettings, cur, end);
-    Stepper backwardStepper(&_terrain, &_stepSettings, end, cur);
+    Stepper forwardStepper(&_stepSettings, cur, end);
+    Stepper backwardStepper(&_stepSettings, end, cur);
 
     forward.push_back(cur);
     backward.push_back(end);
@@ -644,7 +625,7 @@ void CityGen::GeneratePrimary()
       backward.push_front(b);
 
       float len = distance(f, b);
-      if (len <= _terrain._scale || len >= prevLen)
+      if (len <= g_terrain._scale || len >= prevLen)
       {
         for (const vec3& v : forward)
           _primary.push_back(v);
@@ -686,12 +667,12 @@ void CityGen::RenderUI()
   static bool open = true;
   ImGui::Begin("Properties", &open, ImVec2(200, 100));
 
-  if (ImGui::InputFloat("scale", &_terrain._scale, 1)
-    || ImGui::InputFloat("h-scale", &_terrain._heightScale, 0.1f))
+  if (ImGui::InputFloat("scale", &g_terrain._scale, 1)
+    || ImGui::InputFloat("h-scale", &g_terrain._heightScale, 0.1f))
   {
-    _terrain._scale = max(1.f, min(100.f, _terrain._scale));
-    _terrain._heightScale = max(0.1f, min(5.f, _terrain._heightScale));
-    _terrain.CreateMesh();
+    g_terrain._scale = max(1.f, min(100.f, g_terrain._scale));
+    g_terrain._heightScale = min(5.f, g_terrain._heightScale);
+    g_terrain.CreateMesh();
   }
 
   if (ImGui::InputInt("# segments", &_stepSettings.numSegments, 1, 5)
@@ -704,6 +685,17 @@ void CityGen::RenderUI()
 
   ImGui::Separator();
 
+  CellParameterSet& cell = _cellParamterSets.front();
+
+  if (ImGui::InputFloat("segment_size", &cell.segmentSize, 1, 5) || ImGui::InputFloat("deviation", &cell.segmentSizeDeviation, 0.1f, 1)
+      || ImGui::InputInt("degree", &cell.degree)
+      || ImGui::InputFloat("snap_size", &cell.snapSize, 1, 5) || ImGui::InputFloat("deviation", &cell.snapSizeDeviation, 0.1f, 1)
+      || ImGui::InputFloat("connectivity", &cell.connectivity, 0.05f, 5))
+  {
+    CalcCells();
+  }
+
+  ImGui::Separator();
   ImGui::Checkbox("normals", &_drawNormals);
   ImGui::Checkbox("debuglines", &_drawDebugLines);
 
@@ -732,7 +724,7 @@ void CityGen::Render()
   g_cameraPos = glm::vec3(0.0f, 600, z);
 //  g_cameraPos = glm::vec3(0.0f, 500, 1500);
   mat4 dir = glm::lookAt(g_cameraPos, glm::vec3(0, 0, z), glm::vec3(0, 0, -1) );
-  _rot = CITYGEN._arcball->createViewRotationMatrix();
+  _rot = g_city._arcball->createViewRotationMatrix();
   g_view = _rot * dir;
   glLoadMatrixf(glm::value_ptr(g_view));
 
@@ -745,15 +737,15 @@ void CityGen::Render()
 
   // draw terrain
   glColor4ub(0xfd, 0xf6, 0xe3, 255);
-  glVertexPointer(3, GL_FLOAT, 0, _terrain._verts.data());
-  glDrawElements(GL_TRIANGLES, (GLsizei)_terrain._indices.size(), GL_UNSIGNED_INT, _terrain._indices.data());
+  glVertexPointer(3, GL_FLOAT, 0, g_terrain._verts.data());
+  glDrawElements(GL_TRIANGLES, (GLsizei)g_terrain._indices.size(), GL_UNSIGNED_INT, g_terrain._indices.data());
 
   if (_drawNormals)
   {
-    vector<vec3> normals(_terrain._tris.size()*2);
-    for (size_t i = 0; i < _terrain._tris.size(); ++i)
+    vector<vec3> normals(g_terrain._tris.size()*2);
+    for (size_t i = 0; i < g_terrain._tris.size(); ++i)
     {
-      const Tri& tri = _terrain._tris[i];
+      const Tri& tri = g_terrain._tris[i];
       vec3 p = (tri.v0 + tri.v1 + tri.v2) / 3.f;
       normals[i*2+0] = p;
       normals[i*2+1] = p + 10.f * tri.n;
@@ -772,11 +764,11 @@ void CityGen::Render()
   }
 
   // draw intersected tris
-  if (!_terrain._intersected.empty())
+  if (!g_terrain._intersected.empty())
   {
     glColor4ub(0xfd, 0xf6, 0x0, 255);
-    glVertexPointer(3, GL_FLOAT, 0, _terrain._intersected.data());
-    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)_terrain._intersected.size());
+    glVertexPointer(3, GL_FLOAT, 0, g_terrain._intersected.data());
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)g_terrain._intersected.size());
   }
 
   // draw primary
@@ -823,6 +815,9 @@ void CityGen::LoadSettings(const char* filename)
 
   // load settings
   protocol::Settings settings = city.settings();
+
+  g_terrain.FromProtocol(settings.terrain_settings());
+
   _stepSettings.FromProtocol(settings.step_settings());
 
   _cellParamterSets.clear();
@@ -832,12 +827,6 @@ void CityGen::LoadSettings(const char* filename)
     _cellParamterSets.back().FromProtocol(ps);
   }
 
-  // add a default parameter set
-  if (_cellParamterSets.empty())
-  {
-    _cellParamterSets.push_back(CellParameterSet());
-  }
-
   // load nodes
   _nodes.clear();
   _nodes.reserve(city.nodes_size());
@@ -845,18 +834,6 @@ void CityGen::LoadSettings(const char* filename)
   {
     _nodes.push_back(FromProtocol(v));
   }
-
-  _graph.Reset();
-
-  // create the graph, and create the primary nodes
-  for (size_t i = 0; i < _nodes.size() - 1; ++i)
-  {
-    Vertex* v0 = _graph.FindOrCreateVertex(&_terrain, _nodes[i+0]);
-    Vertex* v1 = _graph.FindOrCreateVertex(&_terrain, _nodes[i+1]);
-    _graph.AddEdge(v0, v1);
-  }
-  GeneratePrimary();
-
 }
 
 //----------------------------------------------------------------------------------
@@ -864,6 +841,8 @@ void CityGen::SaveSettings(const char* filename)
 {
   protocol::City city;
   protocol::Settings* settings = city.mutable_settings();
+
+  g_terrain.ToProtocol(settings->mutable_terrain_settings());
   _stepSettings.ToProtocol(settings->mutable_step_settings());
 
   for (const auto& ps : _cellParamterSets)
@@ -883,18 +862,41 @@ void CityGen::SaveSettings(const char* filename)
 }
 
 //----------------------------------------------------------------------------------
+void CityGen::PostLoadSetup()
+{
+  g_terrain.CreateMesh();
+
+  // add a default parameter set
+  if (_cellParamterSets.empty())
+  {
+    _cellParamterSets.push_back(CellParameterSet());
+  }
+
+  _graph.Reset();
+
+  if (!_nodes.empty())
+  {
+    // create the graph, and create the primary nodes
+    for (size_t i = 0; i < _nodes.size() - 1; ++i)
+    {
+      Vertex* v0 = _graph.FindOrCreateVertex(_nodes[i+0]);
+      Vertex* v1 = _graph.FindOrCreateVertex(_nodes[i+1]);
+      _graph.AddEdge(v0, v1);
+    }
+    GeneratePrimary();
+  }
+
+}
+
+//----------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-
-  CityGen::Create();
-  if (!CITYGEN.Init())
+  if (!g_city.Init())
     return 1;
 
-  CITYGEN.Run();
+  g_city.Run();
 
-  CITYGEN.Close();
-
-  CityGen::Destroy();
+  g_city.Close();
 
   return 0;
 }

@@ -1,6 +1,7 @@
 #include "graph.hpp"
 #include "terrain.hpp"
 #include "utils.hpp"
+#include "citygen.hpp"
 
 using namespace citygen;
 
@@ -80,9 +81,10 @@ void Graph::CreateCycle(const Vertex* v)
 }
 
 //----------------------------------------------------------------------------------
-Vertex* Graph::FindOrCreateVertex(Terrain* terrain, const vec3& v)
+Vertex* Graph::FindOrCreateVertex(const vec3& v)
 {
-  Tri* tri = terrain->FindTri(v);
+  Tri* tri = g_terrain.FindTri(v);
+  assert(tri);
 
   // check for an existing vertex that points to the given triangle
   auto it = _triToVerts.find(tri);

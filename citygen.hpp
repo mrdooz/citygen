@@ -31,6 +31,7 @@ namespace citygen
   struct StepSettings
   {
     void ToProtocol(protocol::StepSettings* proto) const;
+
     void FromProtocol(const protocol::StepSettings& proto);
 
     int numSegments = 20;
@@ -50,30 +51,40 @@ namespace citygen
 
     struct StateFlagsF
     {
-      enum Enum { Done = 1 << 0, Paused = 1 << 1, };
-      struct Bits { u32 done : 1; u32 paused : 1; };
+      enum Enum
+      {
+        Done = 1 << 0, Paused = 1 << 1,
+      };
+      struct Bits
+      {
+        u32 done : 1;
+        u32 paused : 1;
+      };
     };
     typedef Flags<StateFlagsF> StateFlags;
 
     struct ClickFlagsF
     {
-      enum Enum { FirstClick = 1 << 0, Dragging = 1 << 1, };
-      struct Bits { u32 firstClick : 1; u32 dragging : 1; };
+      enum Enum
+      {
+        FirstClick = 1 << 0, Dragging = 1 << 1,
+      };
+      struct Bits
+      {
+        u32 firstClick : 1;
+        u32 dragging : 1;
+      };
     };
     typedef Flags<ClickFlagsF> ClickFlags;
 
-    static void Create();
-    static void Destroy();
-    static CityGen& Instance();
+    CityGen();
+    ~CityGen();
 
     bool Init();
     bool Run();
     bool Close();
 
     void AddPoint(const vec3& pt);
-
-    CityGen();
-    ~CityGen();
 
     void Update();
     void Render();
@@ -83,18 +94,18 @@ namespace citygen
 
     void LoadSettings(const char* filename);
     void SaveSettings(const char* filename);
-    void CalcCells();
 
+    void PostLoadSetup();
+
+    void CalcCells();
     void CalcSecondary(const Cycle& cycle, const CellParameterSet& params);
 
-    static CityGen* _instance;
     string _appRoot;
     //ptime _lastUpdate;
     //time_duration _curTime;
     //time_duration _fileWatchAcc;
     StateFlags _stateFlags;
 
-    Terrain _terrain;
     FileWatcher _fileWatcher;
     Arcball* _arcball;
 
@@ -114,10 +125,12 @@ namespace citygen
 
     Graph _graph;
 
+    string _configBase;
     string _configFile;
     ClickFlags _clickFlags;
     vec3 _dragStart;
   };
 
-#define CITYGEN CityGen::Instance()
+  extern CityGen g_city;
+  extern Terrain g_terrain;
 }

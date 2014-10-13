@@ -110,20 +110,24 @@ static void glfw_error_callback(int error, const char* description)
 
 static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-  CITYGEN._arcball->mouseButtonCallback(window, button, action, mods);
+  g_city._arcball->mouseButtonCallback(window, button, action, mods);
 
   if (action == GLFW_PRESS && button >= 0 && button < 2)
     mousePressed[button] = true;
 
   if (action == GLFW_RELEASE && button == 0)
   {
-    CITYGEN.AddPoint(CITYGEN._terrain._intersection);
+    g_city.AddPoint(g_terrain._intersection);
   }
 }
 
 static void glfw_cursor_callback(GLFWwindow *window, double x, double y)
 {
-  CITYGEN._arcball->cursorCallback(g_window, (float)x, (float)y);
+  ImGuiIO& io = ImGui::GetIO();
+  if (io.KeyCtrl)
+  {
+    g_city._arcball->cursorCallback(g_window, (float)x, (float)y);
+  }
 
   float depth = 1;
   glm::vec4 viewport = glm::vec4(0, 0, g_windowWidth, g_windowHeight);
@@ -131,7 +135,7 @@ static void glfw_cursor_callback(GLFWwindow *window, double x, double y)
   glm::vec3 objcoord = glm::unProject(wincoord, g_view, g_proj, viewport);
 
   vec3 dir = glm::normalize(objcoord - g_cameraPos);
-  CITYGEN._terrain.CalcIntersection(g_cameraPos, dir);
+  g_terrain.CalcIntersection(g_cameraPos, dir);
 }
 
 static void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -176,9 +180,6 @@ void InitGL()
 
   //glewInit();
 
-  int w, h;
-  glfwGetWindowSize(g_window, &w, &h);
-  CITYGEN._arcball = new Arcball(w, h);
 }
 
 void InitImGui()

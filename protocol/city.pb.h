@@ -35,8 +35,9 @@ void protobuf_AssignDesc_city_2eproto();
 void protobuf_ShutdownFile_city_2eproto();
 
 class Vector3;
-class SecondaryParameterSet;
+class CellParameterSet;
 class StepSettings;
+class TerrainSettings;
 class Settings;
 class City;
 
@@ -144,14 +145,14 @@ class Vector3 : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
-class SecondaryParameterSet : public ::google::protobuf::Message {
+class CellParameterSet : public ::google::protobuf::Message {
  public:
-  SecondaryParameterSet();
-  virtual ~SecondaryParameterSet();
+  CellParameterSet();
+  virtual ~CellParameterSet();
 
-  SecondaryParameterSet(const SecondaryParameterSet& from);
+  CellParameterSet(const CellParameterSet& from);
 
-  inline SecondaryParameterSet& operator=(const SecondaryParameterSet& from) {
+  inline CellParameterSet& operator=(const CellParameterSet& from) {
     CopyFrom(from);
     return *this;
   }
@@ -165,17 +166,17 @@ class SecondaryParameterSet : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const SecondaryParameterSet& default_instance();
+  static const CellParameterSet& default_instance();
 
-  void Swap(SecondaryParameterSet* other);
+  void Swap(CellParameterSet* other);
 
   // implements Message ----------------------------------------------
 
-  SecondaryParameterSet* New() const;
+  CellParameterSet* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const SecondaryParameterSet& from);
-  void MergeFrom(const SecondaryParameterSet& from);
+  void CopyFrom(const CellParameterSet& from);
+  void MergeFrom(const CellParameterSet& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -254,7 +255,7 @@ class SecondaryParameterSet : public ::google::protobuf::Message {
   inline float connectivity() const;
   inline void set_connectivity(float value);
 
-  // @@protoc_insertion_point(class_scope:citygen.protocol.SecondaryParameterSet)
+  // @@protoc_insertion_point(class_scope:citygen.protocol.CellParameterSet)
  private:
   inline void set_has_cell_id();
   inline void clear_has_cell_id();
@@ -292,7 +293,7 @@ class SecondaryParameterSet : public ::google::protobuf::Message {
   friend void protobuf_ShutdownFile_city_2eproto();
 
   void InitAsDefaultInstance();
-  static SecondaryParameterSet* default_instance_;
+  static CellParameterSet* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -408,6 +409,98 @@ class StepSettings : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class TerrainSettings : public ::google::protobuf::Message {
+ public:
+  TerrainSettings();
+  virtual ~TerrainSettings();
+
+  TerrainSettings(const TerrainSettings& from);
+
+  inline TerrainSettings& operator=(const TerrainSettings& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const TerrainSettings& default_instance();
+
+  void Swap(TerrainSettings* other);
+
+  // implements Message ----------------------------------------------
+
+  TerrainSettings* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const TerrainSettings& from);
+  void MergeFrom(const TerrainSettings& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional float scale = 1;
+  inline bool has_scale() const;
+  inline void clear_scale();
+  static const int kScaleFieldNumber = 1;
+  inline float scale() const;
+  inline void set_scale(float value);
+
+  // optional float height_scale = 2;
+  inline bool has_height_scale() const;
+  inline void clear_height_scale();
+  static const int kHeightScaleFieldNumber = 2;
+  inline float height_scale() const;
+  inline void set_height_scale(float value);
+
+  // @@protoc_insertion_point(class_scope:citygen.protocol.TerrainSettings)
+ private:
+  inline void set_has_scale();
+  inline void clear_has_scale();
+  inline void set_has_height_scale();
+  inline void clear_has_height_scale();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  float scale_;
+  float height_scale_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_city_2eproto();
+  friend void protobuf_AssignDesc_city_2eproto();
+  friend void protobuf_ShutdownFile_city_2eproto();
+
+  void InitAsDefaultInstance();
+  static TerrainSettings* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class Settings : public ::google::protobuf::Message {
  public:
   Settings();
@@ -462,39 +555,51 @@ class Settings : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional .citygen.protocol.StepSettings step_settings = 1;
+  // optional .citygen.protocol.TerrainSettings terrain_settings = 1;
+  inline bool has_terrain_settings() const;
+  inline void clear_terrain_settings();
+  static const int kTerrainSettingsFieldNumber = 1;
+  inline const ::citygen::protocol::TerrainSettings& terrain_settings() const;
+  inline ::citygen::protocol::TerrainSettings* mutable_terrain_settings();
+  inline ::citygen::protocol::TerrainSettings* release_terrain_settings();
+  inline void set_allocated_terrain_settings(::citygen::protocol::TerrainSettings* terrain_settings);
+
+  // optional .citygen.protocol.StepSettings step_settings = 2;
   inline bool has_step_settings() const;
   inline void clear_step_settings();
-  static const int kStepSettingsFieldNumber = 1;
+  static const int kStepSettingsFieldNumber = 2;
   inline const ::citygen::protocol::StepSettings& step_settings() const;
   inline ::citygen::protocol::StepSettings* mutable_step_settings();
   inline ::citygen::protocol::StepSettings* release_step_settings();
   inline void set_allocated_step_settings(::citygen::protocol::StepSettings* step_settings);
 
-  // repeated .citygen.protocol.SecondaryParameterSet parameter_set = 2;
-  inline int parameter_set_size() const;
-  inline void clear_parameter_set();
-  static const int kParameterSetFieldNumber = 2;
-  inline const ::citygen::protocol::SecondaryParameterSet& parameter_set(int index) const;
-  inline ::citygen::protocol::SecondaryParameterSet* mutable_parameter_set(int index);
-  inline ::citygen::protocol::SecondaryParameterSet* add_parameter_set();
-  inline const ::google::protobuf::RepeatedPtrField< ::citygen::protocol::SecondaryParameterSet >&
-      parameter_set() const;
-  inline ::google::protobuf::RepeatedPtrField< ::citygen::protocol::SecondaryParameterSet >*
-      mutable_parameter_set();
+  // repeated .citygen.protocol.CellParameterSet cell_parameter_set = 3;
+  inline int cell_parameter_set_size() const;
+  inline void clear_cell_parameter_set();
+  static const int kCellParameterSetFieldNumber = 3;
+  inline const ::citygen::protocol::CellParameterSet& cell_parameter_set(int index) const;
+  inline ::citygen::protocol::CellParameterSet* mutable_cell_parameter_set(int index);
+  inline ::citygen::protocol::CellParameterSet* add_cell_parameter_set();
+  inline const ::google::protobuf::RepeatedPtrField< ::citygen::protocol::CellParameterSet >&
+      cell_parameter_set() const;
+  inline ::google::protobuf::RepeatedPtrField< ::citygen::protocol::CellParameterSet >*
+      mutable_cell_parameter_set();
 
   // @@protoc_insertion_point(class_scope:citygen.protocol.Settings)
  private:
+  inline void set_has_terrain_settings();
+  inline void clear_has_terrain_settings();
   inline void set_has_step_settings();
   inline void clear_has_step_settings();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
+  ::citygen::protocol::TerrainSettings* terrain_settings_;
   ::citygen::protocol::StepSettings* step_settings_;
-  ::google::protobuf::RepeatedPtrField< ::citygen::protocol::SecondaryParameterSet > parameter_set_;
+  ::google::protobuf::RepeatedPtrField< ::citygen::protocol::CellParameterSet > cell_parameter_set_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
 
   friend void  protobuf_AddDesc_city_2eproto();
   friend void protobuf_AssignDesc_city_2eproto();
@@ -675,180 +780,180 @@ inline void Vector3::set_z(float value) {
 
 // -------------------------------------------------------------------
 
-// SecondaryParameterSet
+// CellParameterSet
 
 // optional int32 cell_id = 1;
-inline bool SecondaryParameterSet::has_cell_id() const {
+inline bool CellParameterSet::has_cell_id() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void SecondaryParameterSet::set_has_cell_id() {
+inline void CellParameterSet::set_has_cell_id() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void SecondaryParameterSet::clear_has_cell_id() {
+inline void CellParameterSet::clear_has_cell_id() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void SecondaryParameterSet::clear_cell_id() {
+inline void CellParameterSet::clear_cell_id() {
   cell_id_ = 0;
   clear_has_cell_id();
 }
-inline ::google::protobuf::int32 SecondaryParameterSet::cell_id() const {
+inline ::google::protobuf::int32 CellParameterSet::cell_id() const {
   return cell_id_;
 }
-inline void SecondaryParameterSet::set_cell_id(::google::protobuf::int32 value) {
+inline void CellParameterSet::set_cell_id(::google::protobuf::int32 value) {
   set_has_cell_id();
   cell_id_ = value;
 }
 
 // optional float segment_size = 2 [default = 10];
-inline bool SecondaryParameterSet::has_segment_size() const {
+inline bool CellParameterSet::has_segment_size() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void SecondaryParameterSet::set_has_segment_size() {
+inline void CellParameterSet::set_has_segment_size() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void SecondaryParameterSet::clear_has_segment_size() {
+inline void CellParameterSet::clear_has_segment_size() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void SecondaryParameterSet::clear_segment_size() {
+inline void CellParameterSet::clear_segment_size() {
   segment_size_ = 10;
   clear_has_segment_size();
 }
-inline float SecondaryParameterSet::segment_size() const {
+inline float CellParameterSet::segment_size() const {
   return segment_size_;
 }
-inline void SecondaryParameterSet::set_segment_size(float value) {
+inline void CellParameterSet::set_segment_size(float value) {
   set_has_segment_size();
   segment_size_ = value;
 }
 
 // optional float segment_size_deviation = 3 [default = 0.5];
-inline bool SecondaryParameterSet::has_segment_size_deviation() const {
+inline bool CellParameterSet::has_segment_size_deviation() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void SecondaryParameterSet::set_has_segment_size_deviation() {
+inline void CellParameterSet::set_has_segment_size_deviation() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void SecondaryParameterSet::clear_has_segment_size_deviation() {
+inline void CellParameterSet::clear_has_segment_size_deviation() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void SecondaryParameterSet::clear_segment_size_deviation() {
+inline void CellParameterSet::clear_segment_size_deviation() {
   segment_size_deviation_ = 0.5f;
   clear_has_segment_size_deviation();
 }
-inline float SecondaryParameterSet::segment_size_deviation() const {
+inline float CellParameterSet::segment_size_deviation() const {
   return segment_size_deviation_;
 }
-inline void SecondaryParameterSet::set_segment_size_deviation(float value) {
+inline void CellParameterSet::set_segment_size_deviation(float value) {
   set_has_segment_size_deviation();
   segment_size_deviation_ = value;
 }
 
 // optional int32 degree = 4 [default = 2];
-inline bool SecondaryParameterSet::has_degree() const {
+inline bool CellParameterSet::has_degree() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void SecondaryParameterSet::set_has_degree() {
+inline void CellParameterSet::set_has_degree() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void SecondaryParameterSet::clear_has_degree() {
+inline void CellParameterSet::clear_has_degree() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void SecondaryParameterSet::clear_degree() {
+inline void CellParameterSet::clear_degree() {
   degree_ = 2;
   clear_has_degree();
 }
-inline ::google::protobuf::int32 SecondaryParameterSet::degree() const {
+inline ::google::protobuf::int32 CellParameterSet::degree() const {
   return degree_;
 }
-inline void SecondaryParameterSet::set_degree(::google::protobuf::int32 value) {
+inline void CellParameterSet::set_degree(::google::protobuf::int32 value) {
   set_has_degree();
   degree_ = value;
 }
 
 // optional float degree_deviation = 5 [default = 0.5];
-inline bool SecondaryParameterSet::has_degree_deviation() const {
+inline bool CellParameterSet::has_degree_deviation() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void SecondaryParameterSet::set_has_degree_deviation() {
+inline void CellParameterSet::set_has_degree_deviation() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void SecondaryParameterSet::clear_has_degree_deviation() {
+inline void CellParameterSet::clear_has_degree_deviation() {
   _has_bits_[0] &= ~0x00000010u;
 }
-inline void SecondaryParameterSet::clear_degree_deviation() {
+inline void CellParameterSet::clear_degree_deviation() {
   degree_deviation_ = 0.5f;
   clear_has_degree_deviation();
 }
-inline float SecondaryParameterSet::degree_deviation() const {
+inline float CellParameterSet::degree_deviation() const {
   return degree_deviation_;
 }
-inline void SecondaryParameterSet::set_degree_deviation(float value) {
+inline void CellParameterSet::set_degree_deviation(float value) {
   set_has_degree_deviation();
   degree_deviation_ = value;
 }
 
 // optional float snap_size = 6 [default = 20];
-inline bool SecondaryParameterSet::has_snap_size() const {
+inline bool CellParameterSet::has_snap_size() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void SecondaryParameterSet::set_has_snap_size() {
+inline void CellParameterSet::set_has_snap_size() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void SecondaryParameterSet::clear_has_snap_size() {
+inline void CellParameterSet::clear_has_snap_size() {
   _has_bits_[0] &= ~0x00000020u;
 }
-inline void SecondaryParameterSet::clear_snap_size() {
+inline void CellParameterSet::clear_snap_size() {
   snap_size_ = 20;
   clear_has_snap_size();
 }
-inline float SecondaryParameterSet::snap_size() const {
+inline float CellParameterSet::snap_size() const {
   return snap_size_;
 }
-inline void SecondaryParameterSet::set_snap_size(float value) {
+inline void CellParameterSet::set_snap_size(float value) {
   set_has_snap_size();
   snap_size_ = value;
 }
 
 // optional float snap_size_deviation = 7 [default = 0.5];
-inline bool SecondaryParameterSet::has_snap_size_deviation() const {
+inline bool CellParameterSet::has_snap_size_deviation() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
-inline void SecondaryParameterSet::set_has_snap_size_deviation() {
+inline void CellParameterSet::set_has_snap_size_deviation() {
   _has_bits_[0] |= 0x00000040u;
 }
-inline void SecondaryParameterSet::clear_has_snap_size_deviation() {
+inline void CellParameterSet::clear_has_snap_size_deviation() {
   _has_bits_[0] &= ~0x00000040u;
 }
-inline void SecondaryParameterSet::clear_snap_size_deviation() {
+inline void CellParameterSet::clear_snap_size_deviation() {
   snap_size_deviation_ = 0.5f;
   clear_has_snap_size_deviation();
 }
-inline float SecondaryParameterSet::snap_size_deviation() const {
+inline float CellParameterSet::snap_size_deviation() const {
   return snap_size_deviation_;
 }
-inline void SecondaryParameterSet::set_snap_size_deviation(float value) {
+inline void CellParameterSet::set_snap_size_deviation(float value) {
   set_has_snap_size_deviation();
   snap_size_deviation_ = value;
 }
 
 // optional float connectivity = 8 [default = 0.3];
-inline bool SecondaryParameterSet::has_connectivity() const {
+inline bool CellParameterSet::has_connectivity() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
-inline void SecondaryParameterSet::set_has_connectivity() {
+inline void CellParameterSet::set_has_connectivity() {
   _has_bits_[0] |= 0x00000080u;
 }
-inline void SecondaryParameterSet::clear_has_connectivity() {
+inline void CellParameterSet::clear_has_connectivity() {
   _has_bits_[0] &= ~0x00000080u;
 }
-inline void SecondaryParameterSet::clear_connectivity() {
+inline void CellParameterSet::clear_connectivity() {
   connectivity_ = 0.3f;
   clear_has_connectivity();
 }
-inline float SecondaryParameterSet::connectivity() const {
+inline float CellParameterSet::connectivity() const {
   return connectivity_;
 }
-inline void SecondaryParameterSet::set_connectivity(float value) {
+inline void CellParameterSet::set_connectivity(float value) {
   set_has_connectivity();
   connectivity_ = value;
 }
@@ -947,17 +1052,103 @@ inline void StepSettings::set_road_height(float value) {
 
 // -------------------------------------------------------------------
 
-// Settings
+// TerrainSettings
 
-// optional .citygen.protocol.StepSettings step_settings = 1;
-inline bool Settings::has_step_settings() const {
+// optional float scale = 1;
+inline bool TerrainSettings::has_scale() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void Settings::set_has_step_settings() {
+inline void TerrainSettings::set_has_scale() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void Settings::clear_has_step_settings() {
+inline void TerrainSettings::clear_has_scale() {
   _has_bits_[0] &= ~0x00000001u;
+}
+inline void TerrainSettings::clear_scale() {
+  scale_ = 0;
+  clear_has_scale();
+}
+inline float TerrainSettings::scale() const {
+  return scale_;
+}
+inline void TerrainSettings::set_scale(float value) {
+  set_has_scale();
+  scale_ = value;
+}
+
+// optional float height_scale = 2;
+inline bool TerrainSettings::has_height_scale() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void TerrainSettings::set_has_height_scale() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void TerrainSettings::clear_has_height_scale() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void TerrainSettings::clear_height_scale() {
+  height_scale_ = 0;
+  clear_has_height_scale();
+}
+inline float TerrainSettings::height_scale() const {
+  return height_scale_;
+}
+inline void TerrainSettings::set_height_scale(float value) {
+  set_has_height_scale();
+  height_scale_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// Settings
+
+// optional .citygen.protocol.TerrainSettings terrain_settings = 1;
+inline bool Settings::has_terrain_settings() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Settings::set_has_terrain_settings() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Settings::clear_has_terrain_settings() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Settings::clear_terrain_settings() {
+  if (terrain_settings_ != NULL) terrain_settings_->::citygen::protocol::TerrainSettings::Clear();
+  clear_has_terrain_settings();
+}
+inline const ::citygen::protocol::TerrainSettings& Settings::terrain_settings() const {
+  return terrain_settings_ != NULL ? *terrain_settings_ : *default_instance_->terrain_settings_;
+}
+inline ::citygen::protocol::TerrainSettings* Settings::mutable_terrain_settings() {
+  set_has_terrain_settings();
+  if (terrain_settings_ == NULL) terrain_settings_ = new ::citygen::protocol::TerrainSettings;
+  return terrain_settings_;
+}
+inline ::citygen::protocol::TerrainSettings* Settings::release_terrain_settings() {
+  clear_has_terrain_settings();
+  ::citygen::protocol::TerrainSettings* temp = terrain_settings_;
+  terrain_settings_ = NULL;
+  return temp;
+}
+inline void Settings::set_allocated_terrain_settings(::citygen::protocol::TerrainSettings* terrain_settings) {
+  delete terrain_settings_;
+  terrain_settings_ = terrain_settings;
+  if (terrain_settings) {
+    set_has_terrain_settings();
+  } else {
+    clear_has_terrain_settings();
+  }
+}
+
+// optional .citygen.protocol.StepSettings step_settings = 2;
+inline bool Settings::has_step_settings() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void Settings::set_has_step_settings() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void Settings::clear_has_step_settings() {
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void Settings::clear_step_settings() {
   if (step_settings_ != NULL) step_settings_->::citygen::protocol::StepSettings::Clear();
@@ -987,29 +1178,29 @@ inline void Settings::set_allocated_step_settings(::citygen::protocol::StepSetti
   }
 }
 
-// repeated .citygen.protocol.SecondaryParameterSet parameter_set = 2;
-inline int Settings::parameter_set_size() const {
-  return parameter_set_.size();
+// repeated .citygen.protocol.CellParameterSet cell_parameter_set = 3;
+inline int Settings::cell_parameter_set_size() const {
+  return cell_parameter_set_.size();
 }
-inline void Settings::clear_parameter_set() {
-  parameter_set_.Clear();
+inline void Settings::clear_cell_parameter_set() {
+  cell_parameter_set_.Clear();
 }
-inline const ::citygen::protocol::SecondaryParameterSet& Settings::parameter_set(int index) const {
-  return parameter_set_.Get(index);
+inline const ::citygen::protocol::CellParameterSet& Settings::cell_parameter_set(int index) const {
+  return cell_parameter_set_.Get(index);
 }
-inline ::citygen::protocol::SecondaryParameterSet* Settings::mutable_parameter_set(int index) {
-  return parameter_set_.Mutable(index);
+inline ::citygen::protocol::CellParameterSet* Settings::mutable_cell_parameter_set(int index) {
+  return cell_parameter_set_.Mutable(index);
 }
-inline ::citygen::protocol::SecondaryParameterSet* Settings::add_parameter_set() {
-  return parameter_set_.Add();
+inline ::citygen::protocol::CellParameterSet* Settings::add_cell_parameter_set() {
+  return cell_parameter_set_.Add();
 }
-inline const ::google::protobuf::RepeatedPtrField< ::citygen::protocol::SecondaryParameterSet >&
-Settings::parameter_set() const {
-  return parameter_set_;
+inline const ::google::protobuf::RepeatedPtrField< ::citygen::protocol::CellParameterSet >&
+Settings::cell_parameter_set() const {
+  return cell_parameter_set_;
 }
-inline ::google::protobuf::RepeatedPtrField< ::citygen::protocol::SecondaryParameterSet >*
-Settings::mutable_parameter_set() {
-  return &parameter_set_;
+inline ::google::protobuf::RepeatedPtrField< ::citygen::protocol::CellParameterSet >*
+Settings::mutable_cell_parameter_set() {
+  return &cell_parameter_set_;
 }
 
 // -------------------------------------------------------------------

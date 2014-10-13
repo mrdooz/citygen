@@ -2,6 +2,11 @@
 
 namespace citygen
 {
+  namespace protocol
+  {
+    class TerrainSettings;
+  }
+
   struct Tri
   {
     vec3 v0, v1, v2;
@@ -10,6 +15,10 @@ namespace citygen
 
   struct Terrain
   {
+    void ToProtocol(protocol::TerrainSettings* proto) const;
+    void FromProtocol(const protocol::TerrainSettings& proto);
+
+    bool Init(const char* filename);
     void CreateMesh();
     void CalcIntersection(const vec3& org, const vec3& dir);
     Tri* FindTri(const vec3& pt, vec3* out = nullptr);

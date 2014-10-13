@@ -40,7 +40,7 @@ namespace citygen
 
   struct Graph
   {
-    Vertex* FindOrCreateVertex(Terrain* terrain, const vec3& v);
+    Vertex* FindOrCreateVertex(const vec3& v);
     void DeleteVertex(Vertex* vtx);
 
     void AddEdge(Vertex* a, Vertex* b);
